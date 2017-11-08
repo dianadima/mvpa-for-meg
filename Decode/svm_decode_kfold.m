@@ -2,86 +2,64 @@ function results = svm_decode_kfold (data, labels, varargin)
 % Inputs: data(trials x features), labels. Optional: svm
 % parameters and desired optional performance metrics.
 % Name-value pairs: 
-% 'kernel', default 'linear'
+% 'solver', default 1: L2-regularized dual problem solver (LibLinear);
 % 'boxconstraint', default 1
 % 'kfold', default 5
 % 'standardize', default true (recommended; across training & test sets)
-% 'AUC', default false (return area under curve; note - can increase computation time, as need to convert binary SVM scores to posterior probabilities)
-% 'ind_folds', default false (return accuracy per fold as well as the averaged accuracy across folds)
 % 'weights', default false (output vector of classifier weights & activation patterns associated with them cf. Haufe 2014)
-% 'plotROC', false (plot receiver operating characteristic curve)
-% 'svm_model', false (keep trained svm model)
 %
 % Outputs results structure with non-optional metrics: accuracy, Fscore, sensitivity, specificity. Structure can be accessed using e.g. accuracy = cell2mat({results.Accuracy}).
-% Optional (as above): per-fold accuracy, weights and weight-derived patterns, SVM model, AUC and plot of AUROC.
-% Basic function using MATLAB implementation of svm for classification. Only implements kfold crossvalidation.
+% Optional (as above): weights and weight-derived patterns.
+% Basic function using LibLinear implementation of svm for classification. Only implements kfold crossvalidation.
 
 %parse inputs
 svm_par = svm_args;
-svm_results = svm_eval;
-list = [fieldnames(svm_par); fieldnames(svm_results)];
+list = fieldnames(svm_par);
 p = inputParser;
-for i = 1:length(properties(svm_args))
-    addParameter(p, list{i}, svm_par.(list{i}));
-end;
-for i = length(properties(svm_args))+1:length(properties(svm_args))+length(properties(svm_eval))
-    addParameter(p, list{i}, svm_results.(list{i}));
+for ii = 1:length(properties(svm_args))
+    addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 parse(p, varargin{:});
 svm_par = p.Results;
-clear p svm_results;
+clear p;
 
 if abs(nargin)<2 
     error('Data and labels are needed as inputs.')
 end;
 
-%classification and main results
-cp = classperf (labels);
-SVM_model = fitcsvm(data, labels, 'KernelFunction', svm_par.kernel, 'BoxConstraint', svm_par.boxconstraint, ...
-    'Crossval', 'on', 'KFold', svm_par.kfold, 'Standardize', svm_par.standardize); %train
-[pred,scores] = kfoldPredict(SVM_model); %test
-cp = classperf(cp, pred); %update performance-tracking object
+cv = cvpartition(labels, 'kfold', svm_par.kfold);
+allscore = zeros(length(labels),1); accuracy = zeros(3,5);
 
-results = [];
-
-%non-optional outputs
-results.Accuracy = cp.CorrectRate;
-results.Fscores  = ((2*((cp.PositivePredictiveValue*cp.Sensitivity)/(cp.PositivePredictiveValue + cp.Sensitivity))) + (2*((cp.NegativePredictiveValue*cp.Specificity)/(cp.NegativePredictiveValue + cp.Specificity))))/2;
-results.Confusion = cp.CountingMatrix;
-results.Sensitivity = cp.Sensitivity;
-results.Specificity = cp.Specificity;
-
-%optional outputs
-if svm_par.AUC==true
-    svm_post = fitSVMPosterior(SVM_model);
-    [Xsvm,Ysvm,~,results.AUC] = perfcurve(labels, scores(:,svm_post.ClassNames(1)),'1');
+for ii = 1:svm_par.kfold
+    
+    %scale values using range and minimum of training set
+    kdata = data; %ensures we keep original data
+    if svm_par.standardize
+        data = (kdata - repmat(min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(data(cv.training(ii),:), [], 1) - min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1);
+    end;
+    
+    svm_model = train(labels(cv.training(ii)), sparse(data(cv.training(ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
+    [allscore(cv.test(ii)), accuracy(:,ii), ~] = predict(labels(cv.test(ii)), sparse(data(cv.test(ii),:)), svm_model, '-q 1');
+    
 end;
 
-if svm_par.plotROC==true
-    figure;
-    plot(Xsvm(:,1),Ysvm(:,1), 'k');
-    xlabel('False positive rate');
-    ylabel('True positive rate');
-    title('ROC Curve', 'FontWeight', 'normal');
-end;
+results.Accuracy = mean(accuracy(1,:));
+results.AccuracyMSError = mean(accuracy(2,:));
+results.AccuracyFold = accuracy(1,:);
+results.Confusion = confusionmat(labels,allscore);
+results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
+results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
+PPP = results.Confusion(1,1)/(sum(results.Confusion(:,1)));
+results.Fscore = (2*PPP*results.Sensitivity)/(PPP+results.Sensitivity);
 
-if svm_par.weights==true
-    final_SVM = fitcsvm(data, labels, 'KernelFunction', svm_par.kernel, 'BoxConstraint', svm_par.boxconstraint, ...
-        'Standardize', svm_par.standardize, 'IterationLimit', 1e8, 'CacheSize', 'maximal');
-    %get feature weights (Betas/coeffs) - remember to use absolute values or squares
-    results.Weights = final_SVM.Beta';
-    % get patterns as per Haufe 2014
+%calculate weights and compute activation patterns as per Haufe (2014)
+if svm_par.weights
+    data = (kdata - repmat(min(kdata, [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata, [], 1) - min(kdata, [], 1), size(kdata, 1), 1);
+    svm_model = train(labels, sparse(data), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint));
+    results.Weights = svm_model.w;
     results.WeightPatterns = abs(results.Weights*cov(data));
 end;
 
-if svm_par.ind_folds==true
-    results.FoldAccuracy = 1 - kfoldLoss(svm_post,'mode','individual');
-end;
-
-if svm_par.svm_model==true
-    results.SVMmodel = compact(SVM_model);
-    results.SVMpost = compact(svm_post);
-end;
 
 end
         

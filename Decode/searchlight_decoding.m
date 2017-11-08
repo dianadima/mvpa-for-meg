@@ -1,4 +1,4 @@
-function [ accuracy, results] = searchlight_decoding( data, labels, info_file, varargin )
+function [ accuracy, Fscores] = searchlight_decoding( data, labels, info_file, varargin )
 % Inputs: data, labels, info_file (.mat file obtained using get_sensor_info or get_source_info).
 % Optional: channel set (string or  cell array of strings; default: 'MEG'), 
 % decoding window (limits; default: [-0.1 0.9])
@@ -11,8 +11,7 @@ function [ accuracy, results] = searchlight_decoding( data, labels, info_file, v
 %parse inputs
 dec_args = decoding_args;
 svm_par = svm_args;
-svm_results = svm_eval;
-list = [fieldnames(dec_args); fieldnames(svm_par); fieldnames(svm_results)];
+list = [fieldnames(dec_args); fieldnames(svm_par)];
 p = inputParser;
 
 for i = 1:length(properties(decoding_args))
@@ -21,14 +20,11 @@ end;
 for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
-for i = ii+1:length(properties(dec_args))+length(properties(svm_args))+length(properties(svm_eval))
-    addParameter(p, list{i}, svm_results.(list{i}));
-end;
 
 parse(p, varargin{:});
 dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window'}); %converted struct will be fed into decoding function
-clear p svm_results;
+clear p;
 
 load (info_file);
 
@@ -46,9 +42,8 @@ else
     chan_idx = source_idx; %the source-space case
 end;
 accuracy = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1));
+Fscore = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1));
 fprintf('\nRunning searchlight '); 
-
-results = cell(1,length(chan_idx));
 
 for c = 1:length(chan_idx)
     
@@ -56,7 +51,9 @@ for c = 1:length(chan_idx)
     data_svm = arrayfun(@(i) reshape(data(chan_idx{c}, i:i+dec_args.window_length-1,:), length(chan_idx{c})*dec_args.window_length, size(data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %channel and time selection
     results = arrayfun(@(i) svm_decode_kfold(data_svm{i},labels,svm_par), 1:length(data_svm));
     accuracy(c,:) = cell2mat({results.Accuracy});
-    fprintf((repmat('\b',1,numel([num2str(c-1) num2str(length(chan_idx))])+8)));
+    Fscore(c,:) = cell2mat({results.Fscore});
+    fprintf((repmat('\b',1,numel([num2str(c) num2str(length(chan_idx))])+8)));
+    clear data_svm;
     
 end;
 

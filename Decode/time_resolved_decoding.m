@@ -9,8 +9,7 @@ function [ results ] = time_resolved_decoding( data,labels, info_file, varargin 
 %parse inputs
 dec_args = decoding_args;
 svm_par = svm_args;
-svm_results = svm_eval;
-list = [fieldnames(dec_args); fieldnames(svm_par); fieldnames(svm_results)];
+list = [fieldnames(dec_args); fieldnames(svm_par)];
 p = inputParser;
 
 for i = 1:length(properties(decoding_args))
@@ -19,14 +18,11 @@ end;
 for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
-for i = ii+1:length(properties(dec_args))+length(properties(svm_args))+length(properties(svm_eval))
-    addParameter(p, list{i}, svm_results.(list{i}));
-end;
 
 parse(p, varargin{:});
 dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window'}); %converted struct will be fed into decoding function
-clear p svm_results;
+clear p;
 
 %load info file...
 load(info_file);
