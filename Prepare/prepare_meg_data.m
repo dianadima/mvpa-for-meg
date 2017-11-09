@@ -1,19 +1,23 @@
 function [ data,labels ] = prepare_meg_data( data1, data2, varargin )
-% Input: full path of files containing channel x time x trial data for each
+% Input: Data, or full path of files containing channel x time x trial data for each
 %    condition. Data variable can have any name, but has to be the only variable 
 %    in the file. Trial dimension should be the last one. Otherwise, specify the
 %    trial dimension using a 3rd argument (i.e. 1, if data is trials*features).
 % Output: classifier-ready concatenated data & label vector.
 
-name = whos('-file', data1);
-var = name(1).name;
-load(data1, var);
-eval(sprintf('data1 = %s;',var));
-
-name = whos('-file',data2);
-var = name(1).name;
-load(data2, var);
-eval(sprintf('data2 = %s;',var));
+if ischar(data1) && ischar(data2)
+    
+    name = whos('-file', data1);
+    var = name(1).name;
+    load(data1, var);
+    eval(sprintf('data1 = %s;',var));
+    
+    name = whos('-file',data2);
+    var = name(1).name;
+    load(data2, var);
+    eval(sprintf('data2 = %s;',var));
+    
+end;
 
 if ndims(data1) ~= ndims(data2)
     error('Both datasets need to have the same size and number of dimensions.')
