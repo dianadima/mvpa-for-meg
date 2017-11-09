@@ -1,12 +1,12 @@
-function [ accuracy, Fscores] = searchlight_decoding( data, labels, info_file, varargin )
+function [ accuracy, Fscore] = searchlight_decoding( data, labels, info_file, varargin )
 % Inputs: data, labels, info_file (.mat file obtained using get_sensor_info or get_source_info).
 % Optional: channel set (string or  cell array of strings; default: 'MEG'), 
 % decoding window (limits; default: [-0.1 0.9])
 % and window length (in sampled time points; default here:10);
 % SVM settings, svm evaluation metrics (see Documentation).
-% Output: time and space-resolved accuracy.
+% Output: time and space-resolved accuracy and F1-score (channels x time).
 % Performs time and space-resolved SVM decoding of MEG data. Uses
-% sensor neighbours defined using FT template configuration (or custom structure).
+% sensor neighbours defined using FT template configuration (or custom structure containing source indices).
 
 %parse inputs
 dec_args = decoding_args;
