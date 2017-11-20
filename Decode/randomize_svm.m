@@ -17,7 +17,7 @@ for idx = 1:num_iterations
         test_labels = varargin{2}; test_labels = test_labels(randperm(length(test_labels)));
         results = svm_decode_holdout(data, rand_labels, varargin{1}, test_labels);
     else
-        error('Wrong number of arguments. Read help file');
+        error('Wrong number of arguments. Refer to help file');
     end;
     
     accuracy(idx) = results.Accuracy;

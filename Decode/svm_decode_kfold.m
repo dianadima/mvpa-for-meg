@@ -5,10 +5,10 @@ function results = svm_decode_kfold (data, labels, varargin)
 % 'solver', default 1: L2-regularized dual problem solver (LibLinear);
 % 'boxconstraint', default 1
 % 'kfold', default 5
-% 'standardize', default true (recommended; across training & test sets)
+% 'standardize', default true (recommended; across training set)
 % 'weights', default false (output vector of classifier weights & activation patterns associated with them cf. Haufe 2014)
 %
-% Outputs results structure with non-optional metrics: accuracy, Fscore, sensitivity, specificity. Structure can be accessed using e.g. accuracy = cell2mat({results.Accuracy}).
+% Outputs results structure with non-optional metrics: accuracy, Fscore, sensitivity, specificity. 
 % Optional (as above): weights and weight-derived patterns.
 % Basic function using LibLinear implementation of svm for classification. Only implements kfold crossvalidation.
 
@@ -49,8 +49,11 @@ results.AccuracyFold = accuracy(1,:);
 results.Confusion = confusionmat(labels,allscore);
 results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
 results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
-PPP = results.Confusion(1,1)/(sum(results.Confusion(:,1)));
-results.Fscore = (2*PPP*results.Sensitivity)/(PPP+results.Sensitivity);
+PP = results.Confusion(1,1)/(sum(results.Confusion(:,1))); %positive predictive value: class1
+NP = results.Confusion(2,2)/(sum(results.Confusion(:,2))); %negative predictive value: class2
+results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);
+results.Fscore2 = (2*NP*results.Specificity)/(NP+results.Specificity);
+results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:)))*results.Fscore1) + ((sum(results.Confusion(:,2))/sum(results.Confusion(:)))*results.Fscore2);
 
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights

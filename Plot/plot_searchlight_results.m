@@ -43,7 +43,7 @@ elseif ndims(results)==3
     acc = squeeze(mean(results,1));
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
-    error('Accuracy should be a 2d or 3d matrix containing subjects x time x channels');
+    error('Results should be a 2d or 3d matrix containing subjects x time x channels');
 end;
 
 %create structure for plotting

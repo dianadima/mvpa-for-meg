@@ -12,11 +12,10 @@ function [ results ] = svm_decode_kfold_auc( data, labels, varargin )
 %   'plotROC', default false (plot ROC curve).
 %   'boxconstraint', default 1
 %   'kfold', default 5
-%   'standardize', default true (recommended; across training & test sets)
+%   'standardize', default true (recommended; across training set)
 %   'weights', default false (output vector of classifier weights & activation patterns associated with them cf. Haufe 2014)
 %
 % Outputs results structure with non-optional metrics: AUC, ROC, accuracy, Fscore, sensitivity, specificity. 
-% Structure can be accessed using e.g. accuracy = cell2mat({results.Accuracy}).
 % Optional: weights and weight-derived patterns.
 % Basic function using libSVM implementation of svm for classification. Only implements kfold crossvalidation.
 
@@ -47,7 +46,7 @@ for ii = 1:svm_par.kfold
         data = (kdata - repmat(min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(data(cv.training(ii),:), [], 1) - min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1);
     end;
     
-    svm_model = svmtrain(labels(cv.training(ii)), data(cv.training(ii),:), sprintf('-s 0 -t 0 -c %d -b 1 -q 1', svm_par.boxconstraint));
+    svm_model = svmtrain(labels(cv.training(ii)), data(cv.training(ii),:), sprintf('-t 0 -c %d -b 1 -q 1', svm_par.boxconstraint));
     [allscore(cv.test(ii)), accuracy(:,ii), post_prob(cv.test(ii),:)] = svmpredict(labels(cv.test(ii)), data(cv.test(ii),:), svm_model, '-b 1 -q 1');
     
 end;
@@ -58,8 +57,9 @@ results.AccuracyFold = accuracy(1,:);
 results.Confusion = confusionmat(labels,allscore);
 results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
 results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
-PPP = results.Confusion(1,1)/(sum(results.Confusion(:,1)));
-results.Fscore = (2*PPP*results.Sensitivity)/(PPP+results.Sensitivity);
+results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);
+results.Fscore2 = (2*NP*results.Specificity)/(NP+results.Specificity);
+results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:)))*results.Fscore1) + ((sum(results.Confusion(:,2))/sum(results.Confusion(:)))*results.Fscore2);
 [results.ROC(:,1),results.ROC(:,2),~,results.AUC] = perfcurve(labels, post_prob(:,1),'1');
 
 if svm_par.plotROC
