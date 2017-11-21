@@ -68,7 +68,8 @@ if svm_par.weights
     data = (kdata - repmat(min(kdata, [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata, [], 1) - min(kdata, [], 1), size(kdata, 1), 1);
     svm_model = train(labels, sparse(data), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint));
     results.Weights = svm_model.w;
-    results.WeightPatterns = abs(results.Weights*cov(data));
+    results.WeightPatterns = abs(cov(data)*results.Weights'/cov(data*results.Weights'));
+    results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns))/(max(results.WeightPatterns)-min(results.WeightPatterns));
 end;
 
 

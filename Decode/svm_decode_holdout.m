@@ -48,7 +48,8 @@ results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:))
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights
     results.Weights = svm_model.w;
-    results.WeightPatterns = abs(results.Weights*cov(train_data));
+    results.WeightPatterns = abs(cov(data)*results.Weights'/cov(data*results.Weights'));
+    results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns))/(max(results.WeightPatterns)-min(results.WeightPatterns));
 end;
 
 
