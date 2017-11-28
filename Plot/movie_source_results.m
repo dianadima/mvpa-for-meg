@@ -1,4 +1,4 @@
-function [ vid_obj ] = movie_source_results( results, output_file, varargin )
+function [vid_obj] = movie_source_results( results, output_file, varargin )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % Need to add capability for ROI and searchlight plotting
