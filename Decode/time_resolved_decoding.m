@@ -25,19 +25,24 @@ svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window
 clear p;
 
 %load info file...
-load(info_file);
-if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
-    chan_idx = dec_args.channels;
-else
-    chan_idx = 1:size(data,1); %initialize with entire array
-    if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
-        chan = [];
-        for i = 1:length(dec_args.channels)
-            idx = cellfun('isempty',strfind(chan_labels,dec_args.channels{i}));
-            chan = [chan chan_idx(~idx)]; %#ok<AGROW>
+if exist(info_file, 'file')
+    load(info_file);
+    if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
+        chan_idx = dec_args.channels;
+    else
+        chan_idx = 1:size(data,1); %initialize with entire array
+        if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
+            chan = [];
+            for i = 1:length(dec_args.channels)
+                idx = cellfun('isempty',strfind(chan_labels,dec_args.channels{i}));
+                chan = [chan chan_idx(~idx)]; %#ok<AGROW>
+            end;
+            chan_idx = chan;
         end;
-        chan_idx = chan;
     end;
+else
+    chan_idx = 1:size(data,1);
+    time = 1:size(data,2);
 end;
 
 if ~isempty(dec_args.decoding_window)
