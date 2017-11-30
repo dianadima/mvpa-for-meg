@@ -20,51 +20,32 @@ end;
 for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
-
-addParameter(p,'time',[]);
-
+addParameter(p,'sample_rate',[]);
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window'}); %converted struct will be fed into decoding function
 clear p;
 
 %channel indices for each searchlight iteration
 if isstruct(cluster_idx) %the sensor-space case
     chan_idx = arrayfun(@(i) find(ismember({cluster_idx.label},cluster_idx(i).neighblabel)), 1:length(cluster_idx), 'UniformOutput', false); %store all searchlight idx in a cell array
-else
-    chan_idx = cluster_idx; %the source-space case
-end;
-
-%create time axis
-if ~isempty(dec_args.time)
-    time = dec_args.time;
-elseif isfield(cluster_idx, 'time')
     time = cluster_idx.time;
 else
-    time = 1:size(data,2);
+    chan_idx = cluster_idx; %the source-space case
+    time = [];
 end;
+
+if isempty(time)
+    if ~isempty(dec_args.sample_rate)
+        time = 
+
+
 
 %time limits for decoding window
-if ~isempty(dec_args.decoding_window)
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
-        lims(1) = find(round(time,3)==dec_args.decoding_window(1));
-    else
-        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
-        lims(1) = 1;
-    end;
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
-    else
-        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
-        lims(2) = size(data,2);
-    end;
-        
+if ~isempty(dec_args.decoding_window) && ~isempty(time)
+    lims = [find(round(time,3)==dec_args.decoding_window(1)) find(round(time,3)==dec_args.decoding_window(2))];
 else
-    lims = [1 size(data,2)];
-end;
-
-if size(data,2)<lims(2)
-    lims(2) = size(data,2);
+    lims = [1 length(time)];
 end;
 
 accuracy = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1));
@@ -77,7 +58,7 @@ for c = 1:length(chan_idx)
     data_svm = arrayfun(@(i) reshape(data(chan_idx{c}, i:i+dec_args.window_length-1,:), length(chan_idx{c})*dec_args.window_length, size(data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %channel and time selection
     results = arrayfun(@(i) svm_decode_kfold(data_svm{i},labels,svm_par), 1:length(data_svm));
     accuracy(c,:) = cell2mat({results.Accuracy});
-    Fscore(c,:) = cell2mat({results.WeightedFscore});
+    Fscore(c,:) = cell2mat({results.Fscore});
     fprintf((repmat('\b',1,numel([num2str(c) num2str(length(chan_idx))])+8)));
     clear data_svm;
     

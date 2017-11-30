@@ -30,7 +30,7 @@ if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
 end;
 if exist('sensor_idx','var')
-    if ~exist('chan_idx', 'var')
+    if ~exist(chan_idx, 'var')
         chan_idx = 1:size(data,1); %initialize with entire array
         if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
             chan = [];
@@ -53,13 +53,13 @@ if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
         lims(1) = find(round(time,3)==dec_args.decoding_window(1));
     else
-        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
+        fprintf('Warning: starting timepoint not found, starting from beginning of data...');
         lims(1) = 1;
     end;
     if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
         lims(2) = find(round(time,3)==dec_args.decoding_window(2));
     else
-        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
+        fprintf('Warning: end timepoint not found, decoding until end of data...');
         lims(2) = size(data,2);
     end;
         
