@@ -3,10 +3,11 @@ function [roi_idx] = source_to_aal(sourcemodel)
 %Inputs: - sourcemodelfile is filename of grid used in FT beamforming, i.e. standard_sourcemodel10mm.
 %        - savefile is filename to store cell array containing indices (roi_idx).
 
-atlas = ft_read_atlas('/cubric/software/MEG/fieldtrip-20161011/template/atlas/aal/ROI_MNI_V4.nii'); %load AAL atlas
+[~, ftdir] = ft_version; %get FT directory
+atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii'); %load AAL atlas
 
 if ischar(sourcemodel)
-    load(['/cubric/software/MEG/fieldtrip-20161011/template/sourcemodel/' sourcemodel], 'sourcemodel'); %load sourcemodel
+    load([ftdir '/template/sourcemodel/' sourcemodel], 'sourcemodel'); %load sourcemodel
 end;
 sourcemodel = ft_convert_units(sourcemodel,'mm');
 
