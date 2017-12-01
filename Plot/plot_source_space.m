@@ -7,6 +7,10 @@ addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
 parse(p, varargin{:});
 
+if size(accuracy,1)>1
+    accuracy = accuracy';
+end;
+
 %load sourcemodel
 [~, ftdir] = ft_version; %get FT directory
 if p.Results.sourcemodel_resolution==7.5
@@ -16,10 +20,9 @@ else
 end;
 sourcemodel = ft_convert_units(sourcemodel, 'mm'); %#ok<NODEF>
 
-if ~exist('source_idx', 'var')
-    source_idx = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
+if isempty(source_idx)
     
-    if length(source_idx) ~= length(accuracy)
+    if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= length(accuracy)
         error('Please provide source indices or ensure accuracy vector length fits number of inside sources in FT sourcemodel.')
     end;
     
@@ -44,12 +47,12 @@ else
 end;
     
 cfg = [];
-cfg.method = 'surface';
+cfg.method = 'surface'; 
 cfg.funparameter = 'pow';
 cfg.maskparameter = 'pow';
 cfg.funcolormap = p.Results.colormap;
 cfg.funcolorlim = p.Results.colorlim;
-cfg.opacitylim =  permute(p.Results.colorlim, [2 1]);
+cfg.opacitylim = p.Results.colorlim;
 cfg.opacitymap = 'rampup';
 cfg.projmethod = 'nearest';
 cfg.surffile = 'surface_white_both.mat';
