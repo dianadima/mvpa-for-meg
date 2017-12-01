@@ -4,7 +4,7 @@ function [roi_idx] = source_to_aal(sourcemodel)
 %        - savefile is filename to store cell array containing indices (roi_idx).
 
 [~, ftdir] = ft_version; %get FT directory
-atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii'); %load AAL atlas
+atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii']); %load AAL atlas
 
 if ischar(sourcemodel)
     load([ftdir '/template/sourcemodel/' sourcemodel], 'sourcemodel'); %load sourcemodel
