@@ -29,7 +29,7 @@ clear p;
 if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
 end;
-if exist('sensor_idx','var')
+if ~isempty(sensor_idx)
     if ~exist('chan_idx', 'var')
         chan_idx = 1:size(data,1); %initialize with entire array
         if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
@@ -43,7 +43,7 @@ if exist('sensor_idx','var')
     end;
     time = sensor_idx.time;
 else
-    if ~exist(chan_idx, 'var')
+    if ~exist('chan_idx', 'var')
         chan_idx = 1:size(data,1);
     end;
     time = 1:size(data,2);
