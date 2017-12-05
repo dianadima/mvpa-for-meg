@@ -5,6 +5,7 @@ p = inputParser;
 addParameter(p, 'sourcemodel_resolution',10);
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
+addParameter(p, 'visible', 'on');
 parse(p, varargin{:});
 
 if size(accuracy,1)>1
@@ -57,6 +58,7 @@ cfg.opacitymap = 'rampup';
 cfg.projmethod = 'nearest';
 cfg.surffile = 'surface_white_both.mat';
 cfg.camlight = 'no';
+cfg.visible = p.Results.visible;
 
 ft_sourceplot(cfg,sourcemodel)
 
