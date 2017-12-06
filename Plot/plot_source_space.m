@@ -1,8 +1,10 @@
 function [ ] = plot_source_space( accuracy, source_idx, varargin )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
+[~, ftdir] = ft_version; %get FT directory
+
 p = inputParser;
-addParameter(p, 'sourcemodel_resolution',10);
+addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel10mm'));
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'visible', 'on');
@@ -13,13 +15,20 @@ if size(accuracy,1)>1
 end;
 
 %load sourcemodel
-[~, ftdir] = ft_version; %get FT directory
-if p.Results.sourcemodel_resolution==7.5
-    load(fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d7point5mm'));
+if ischar(p.Results.sourcemodel)
+    [~,~,ext] = fileparts(p.Results.sourcemodel);
+    if strcmp(ext, '.mat')
+        load(p.Results.sourcemodel);
+    else
+        sourcemodel = ft_read_headshape(p.Results.sourcemodel);
+    end;
 else
-    load(fullfile(ftdir, 'template', 'sourcemodel', ['standard_sourcemodel3d' num2str(p.Results.sourcemodel_resolution) 'mm']));
+    sourcemodel = p.Results.sourcemodel;
 end;
-sourcemodel = ft_convert_units(sourcemodel, 'mm'); %#ok<NODEF>
+if ~isfield(sourcemodel, 'inside')
+    sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+end;
+sourcemodel = ft_convert_units(sourcemodel, 'mm');
 
 if isempty(source_idx)
     

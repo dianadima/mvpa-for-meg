@@ -1,13 +1,18 @@
 function [roi_idx] = source_to_aal(sourcemodel)
 %Outputs indices of inside sources in fieldtrip beamformer grid that fall within each of 90 AAL ROIs.
-%Inputs: - sourcemodelfile is filename of grid used in FT beamforming, i.e. standard_sourcemodel10mm.
-%        - savefile is filename to store cell array containing indices (roi_idx).
+%Inputs: - sourcemodelfile is full path of sourcemodel or cortical sheet, e.g. fieldtrip/template/sourcemodel/standard_sourcemodel10mm.
 
 [~, ftdir] = ft_version; %get FT directory
 atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii']); %load AAL atlas
 
 if ischar(sourcemodel)
-    load([ftdir '/template/sourcemodel/' sourcemodel], 'sourcemodel'); %load sourcemodel
+    [~,~,ext] = fileparts(sourcemodel);
+    if strcmp(ext, '.mat')
+        load(sourcemodel); %load sourcemodel
+    else
+        sourcemodel = ft_read_headshape(sourcemodel);
+        sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+    end;
 end;
 sourcemodel = ft_convert_units(sourcemodel,'mm');
 

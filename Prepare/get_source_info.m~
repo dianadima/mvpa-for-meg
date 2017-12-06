@@ -16,21 +16,14 @@ addParameter(p, 'resolution', 10); %searchlight resolution in mm
 addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel10mm'));
 parse(p, varargin{:});
 
-if ischar(p.Results.sourcemodel)
-    [~,~,ext] = fileparts(p.Results.sourcemodel);
-    if strcmp(ext, '.mat')
-        load(p.Results.sourcemodel);
-    else
-        sourcemodel = ft_read_headshape(p.Results.sourcemodel);
-    end;
-else
-    sourcemodel = p.Results.sourcemodel;
-end;
+[~,~,ext] = fileparts(p.Ees
 
-if ~isfield(sourcemodel, 'inside')
-    sourcemodel.inside = true(size(sourcemodel.pos,1),1);
+if p.Results.sourcemodel_resolution==7.5
+    load(fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d7point5mm'));
+else
+    load(fullfile(ftdir, 'template', 'sourcemodel', ['standard_sourcemodel3d' num2str(p.Results.sourcemodel_resolution) 'mm']));
 end;
-sourcemodel = ft_convert_units(sourcemodel, 'mm');
+sourcemodel = ft_convert_units(sourcemodel, 'mm'); %#ok<NODEF>
 
 if strcmp(p.Results.source_selection, 'aal90')
     
@@ -51,7 +44,7 @@ else
     for id = 1:length(voxels)
         source_idx{id} = find(voxels(:,1)>=voxels(id,1)-res&voxels(:,1)<=voxels(id,1)+res&voxels(:,2)>=voxels(id,2)-res&voxels(:,2)<=voxels(id,2)+res&voxels(:,3)>=voxels(id,3)-res&voxels(:,3)<=voxels(id,3)+res);
     end;
-    fprintf('\nCalculated %d cluster indices...\n', length(source_idx));
+    fprintf('\nCalculated %d cluster indices...', length(source_idx));
     
 end;
 
