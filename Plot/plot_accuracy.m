@@ -45,6 +45,7 @@ if ~isempty(p.Results.signif)
 end;
 
 ylim(p.Results.ylim);
+xlim([time(1) time(end)]);
 ylabel(p.Results.ylabel);
 xlabel(p.Results.xlabel);
 box off;
