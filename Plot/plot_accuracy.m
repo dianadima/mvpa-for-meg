@@ -32,18 +32,16 @@ else
     error('The errorbar can contain one or two row vectors');
 end;
 
-
-figure;
-line([time(1) time(end)], [50 50]);
 patch([time fliplr(time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none');
 alpha 0.15; hold on; 
-plot(time, accuracy, p.Results.color);
+line([time(1) time(end)], [50 50]); hold on;
+plot(time, accuracy, p.Results.color); hold on;
 
 if ~isempty(p.Results.signif)
     for j = 1:size(p.Results.signif,1)
-        line([p.Results.signif(j,1) p.Results.signif(j,2)], p.Results.ylim+5, 'color', p.Results.color, 'LineWidth', 2);
+        line([p.Results.signif(j,1) p.Results.signif(j,2)], p.Results.ylim+5, 'color', p.Results.color, 'LineWidth', 2); hold on;
     end;
-    line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color);
+    line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color); hold on;
 end;
 
 ylim(p.Results.ylim);
