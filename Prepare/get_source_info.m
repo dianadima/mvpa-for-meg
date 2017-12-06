@@ -1,4 +1,4 @@
-function [source_idx] = get_source_info(varargin)
+function [source_idx, labels] = get_source_info(varargin)
 %Gets indices of source clusters to go into a searchlight analysis.
 %Inputs: output file name & path.
 %Make sure to use same sourcemodel as for the beamformer analysis! 
@@ -13,12 +13,12 @@ function [source_idx] = get_source_info(varargin)
 p = inputParser;
 addParameter(p, 'source_selection', 'inside'); %all, inside or aal90
 addParameter(p, 'resolution', 10); %searchlight resolution in mm
-addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel10mm'));
+addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d10mm.mat'));
 parse(p, varargin{:});
 
 if ischar(p.Results.sourcemodel)
     [~,~,ext] = fileparts(p.Results.sourcemodel);
-    if strcmp(ext, '.mat')
+    if isempty(ext) || strcmp(ext, '.mat')
         load(p.Results.sourcemodel);
     else
         sourcemodel = ft_read_headshape(p.Results.sourcemodel);
@@ -34,7 +34,7 @@ sourcemodel = ft_convert_units(sourcemodel, 'mm');
 
 if strcmp(p.Results.source_selection, 'aal90')
     
-    source_idx = source_to_aal(sourcemodel);
+    [source_idx, labels] = source_to_aal(sourcemodel);
     
 else
     if strcmp(p.Results.source_selection, 'inside')

@@ -1,4 +1,4 @@
-function [roi_idx] = source_to_aal(sourcemodel)
+function [roi_idx, labels] = source_to_aal(sourcemodel)
 %Outputs indices of inside sources in fieldtrip beamformer grid that fall within each of 90 AAL ROIs.
 %Inputs: - sourcemodelfile is full path of sourcemodel or cortical sheet, e.g. fieldtrip/template/sourcemodel/standard_sourcemodel10mm.
 
@@ -33,5 +33,7 @@ for i = 1:90                                %loop through ROIs
         roi_idx{i}(j) = find(inside==indx(j)); %store indices
     end;
 end;
+
+labels = sourcemodel2.tissuelabel(1:90);
 
 end
