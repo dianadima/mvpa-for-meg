@@ -6,12 +6,13 @@ addParameter(p, 'time',[]);
 addParameter(p, 'color', 'k');
 addParameter(p, 'signif', []);
 addParameter(p, 'smooth', 1);
-addParameter(p, 'alpha', 0.15);
 addParameter(p, 'ylim', [40 100]);
+addParameter(p, 'ylabel', 'Accuracy (%)');
+addParameter(p, 'xlabel', 'Time (s)');
 parse(p, varargin{:});
 
 if isempty(p.Results.time)
-    time = 1:size(accuracy);
+    time = 1:length(accuracy);
 end;
     
 if length(time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
@@ -35,7 +36,7 @@ end;
 figure;
 line([time(1) time(end)], [50 50]);
 patch([time fliplr(time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none');
-hold on; alpha p.Results.alpha;
+alpha 0.15; hold on; 
 plot(time, accuracy, p.Results.color);
 
 if ~isempty(p.Results.signif)
@@ -46,6 +47,9 @@ if ~isempty(p.Results.signif)
 end;
 
 ylim(p.Results.ylim);
+ylabel(p.Results.ylabel);
+xlabel(p.Results.xlabel);
+box off;
 
 end
 
