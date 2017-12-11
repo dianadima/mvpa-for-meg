@@ -7,15 +7,16 @@ addParameter(p, 'color', 'k');
 addParameter(p, 'signif', []);
 addParameter(p, 'smooth', 1);
 addParameter(p, 'ylim', [40 100]);
+addParameter(p, 'xlim', []);
 addParameter(p, 'ylabel', 'Accuracy (%)');
 addParameter(p, 'xlabel', 'Time (s)');
 parse(p, varargin{:});
 
 if isempty(p.Results.time)
-    time = 1:length(accuracy);
+    p.Results.time = 1:length(accuracy);
 end;
     
-if length(time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
+if length(p.Results.time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
     error('Time, accuracy and error should have the same length');
 end;
 
@@ -32,10 +33,10 @@ else
     error('The errorbar can contain one or two row vectors');
 end;
 
-patch([time fliplr(time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none');
+patch([p.Results.time fliplr(p.Results.time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none');
 alpha 0.15; hold on; 
-line([time(1) time(end)], [50 50]); hold on;
-plot(time, accuracy, p.Results.color); hold on;
+line([p.Results.time(1) p.Results.time(end)], [50 50]); hold on;
+plot(p.Results.time, accuracy, p.Results.color); hold on;
 
 if ~isempty(p.Results.signif)
     for j = 1:size(p.Results.signif,1)
@@ -45,7 +46,11 @@ if ~isempty(p.Results.signif)
 end;
 
 ylim(p.Results.ylim);
-xlim([time(1) time(end)]);
+if isempty(p.Results.xlim)
+    xlim([p.Results.time(1) p.Results.time(end)]);
+else
+    xlim([p.Results.xlim(1) p.Results.xlim(2)]);
+end;
 ylabel(p.Results.ylabel);
 xlabel(p.Results.xlabel);
 box off;
