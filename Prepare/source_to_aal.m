@@ -36,4 +36,9 @@ end;
 
 labels = sourcemodel2.tissuelabel(1:90);
 
+if isfield(sourcemodel, 'tri') %if it's a cortical surface, remove deep structures
+    roi_idx(71:80) = [];
+    labels(71:80) = [];
+end;
+
 end
