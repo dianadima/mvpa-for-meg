@@ -21,7 +21,7 @@ else
     end;
 end;
 
-newsz = [n_perm floor(size(data,1)/n_trials) sz(2:end)];
+newsz = [n_perm floor((size(data,1)-1)/n_trials) sz(2:end)];
 newdata = zeros(newsz);
 newlabels = [];
     
