@@ -12,16 +12,20 @@ if isempty(labels)
     n_cond = 1;
     idx = repmat({':'}, 1, ndims(data));
     idx{1} = 1:size(data, trldim);
+    trlsize = floor((size(data,1)-1)/n_trials);
 else
     n_cond = length(unique(labels));
     classes = unique(labels);
     idx = repmat({':'}, n_cond, ndims(data));
+    trlsize = zeros(1,n_cond);
     for i = 1:n_cond
         idx{i,1} = find(labels==classes(i));
+        trlsize(i) = floor(length(find(labels==classes(i)))/n_trials);
     end;
+    trlsize = sum(trlsize);
 end;
 
-newsz = [n_perm floor((size(data,1)-1)/n_trials) sz(2:end)];
+newsz = [n_perm trlsize sz(2:end)];
 newdata = zeros(newsz);
 newlabels = [];
     
