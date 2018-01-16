@@ -5,9 +5,7 @@ function [source_idx, labels] = get_source_info(varargin)
 %Optional inputs: 
 % source_selection: selection of sources(all, inside or aal90; default: inside)
 % resolution: spatial resolution of searchlight(default: 10 mm);
-% decoding_window: time window of interest for further analysis/plotting (default: [], whole time axis saved).
-% sample_rate: of the dataset as it will be used in analysis (after any resampling); default 1200;
-% sourcemodel_resolution: which FT template sourcemodel to use (default:10 mm). Can be 4,5,6,7.5,8,10. 
+% sourcemodel: which FT template sourcemodel to use (default:10 mm). Can be 4,5,6,7.5,8,10. 
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;

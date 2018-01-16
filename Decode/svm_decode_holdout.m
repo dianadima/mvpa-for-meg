@@ -41,6 +41,8 @@ results.AccuracyMSError = accuracy(2);
 results.Confusion = confusionmat(test_labels,scores);
 results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
 results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
+PP = results.Confusion(1,1)/(sum(results.Confusion(:,1))); %positive predictive value: class1
+NP = results.Confusion(2,2)/(sum(results.Confusion(:,2))); %negative predictive value: class2
 results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);
 results.Fscore2 = (2*NP*results.Specificity)/(NP+results.Specificity);
 results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:)))*results.Fscore1) + ((sum(results.Confusion(:,2))/sum(results.Confusion(:)))*results.Fscore2);
@@ -48,7 +50,7 @@ results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:))
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights
     results.Weights = svm_model.w;
-    results.WeightPatterns = abs(cov(data)*results.Weights'/cov(data*results.Weights'));
+    results.WeightPatterns = abs(cov(train_data)*results.Weights'/cov(train_data*results.Weights'));
     results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns))/(max(results.WeightPatterns)-min(results.WeightPatterns));
 end;
 

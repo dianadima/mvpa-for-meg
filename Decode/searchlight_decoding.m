@@ -49,13 +49,13 @@ if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
         lims(1) = find(round(time,3)==dec_args.decoding_window(1));
     else
-        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
+        fprintf('\nWarning: starting timepoint not found, starting from beginning of data...\n');
         lims(1) = 1;
     end;
     if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
         lims(2) = find(round(time,3)==dec_args.decoding_window(2));
     else
-        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
+        fprintf('\nWarning: end timepoint not found, decoding until end of data...\n');
         lims(2) = size(data,2);
     end;
         
