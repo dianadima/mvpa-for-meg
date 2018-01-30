@@ -1,4 +1,4 @@
-function [ accuracy, Fscore] = searchlight_decoding( data, labels, cluster_idx, varargin )
+function [ accuracy, Fscore] = searchlight_decoding_nonlinear( data, labels, cluster_idx, varargin )
 % Inputs: data, labels, cluster_idx (neighbourhood structure or source indices obtained using get_sensor_info or get_source_info).
 % Optional: channel set (string or  cell array of strings; default: 'MEG'), 
 % decoding window (limits; default: [-0.1 0.9])
@@ -75,7 +75,7 @@ for c = 1:length(chan_idx)
     
     fprintf('%d out of %d', c, length(chan_idx));
     data_svm = arrayfun(@(i) reshape(data(chan_idx{c}, i:i+dec_args.window_length-1,:), length(chan_idx{c})*dec_args.window_length, size(data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %channel and time selection
-    results = arrayfun(@(i) svm_decode_kfold(data_svm{i},labels,svm_par), 1:length(data_svm));
+    results = arrayfun(@(i) svm_decode_kfold_libsvm(data_svm{i},labels,svm_par,'AUC', false), 1:length(data_svm));
     accuracy(c,:) = cell2mat({results.Accuracy});
     Fscore(c,:) = cell2mat({results.WeightedFscore});
     fprintf((repmat('\b',1,numel([num2str(c) num2str(length(chan_idx))])+8)));

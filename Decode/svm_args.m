@@ -9,6 +9,7 @@ classdef svm_args
         iterate_cv = 1;
         standardize = true;
         weights = false;
+        kernel = 0; %libSVM: 	0: linear; 1: polynomial; 2:radial basis function; 3:sigmoid
        
     end
     
@@ -23,6 +24,7 @@ classdef svm_args
                 obj.iterate_cv = varargin{4};
                 obj.standardize = varargin{5};
                 obj.weights = varargin{6};
+                obj.kernel = varargin{7};
             end;
         end
                 
