@@ -1,4 +1,4 @@
-function [ ] = plot_searchlight_results(results, info_file, varargin)
+function [ ] = plot_searchlight_results(results, neighbours, varargin)
 %UNTITLED8 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -10,10 +10,23 @@ for i = 1:length(properties(decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
 addParameter(p, 'clim', [40 100]);
+addParameter(p, 'colormap', 'jet');
+addParameter(p,'time',[]);
 parse(p, varargin{:});
 dec_args = p.Results;
 
-load(info_file);
+%create time axis
+if ~isempty(dec_args.time)
+    time = dec_args.time;
+elseif isfield(neighbours, 'time')
+    time = neighbours.time;
+else
+    if ismatrix(results)
+        time = 1:size(data,1);
+    elseif ndims(results)==3
+        time = 1:size(data,2);
+    end;
+end;
 
 if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
@@ -48,14 +61,22 @@ end;
 
 %create structure for plotting
 sens.acc = acc';
-sens.label = chan_labels;
+sens.label = {neighbours(:).label};
 sens.dimord = 'chan_time';
-sens.time = time(lims(1)):dec_args.window_length:time(lims(2));
+sens.time = time;
 cfg.xlim = time(lims(1)):dec_args.window_length:time(lims(2));
+%1D data case (1 timepoint)
+if numel(cfg.xlim)==1
+    cfg.xlim(2) = cfg.xlim(1);
+end;    
 cfg.zlim = dec_args.clim;
 cfg.layout = 'CTF275.lay';
 cfg.parameter = 'acc';
 cfg.style = 'straight';
+cfg.comment = 'no';
+%cfg.commentpos = 'title';
+cfg.interactive = 'no';
+cfg.colormap = dec_args.colormap;
 ft_topoplotER(cfg,sens)
 
 end
