@@ -6,6 +6,7 @@ classdef decoding_args
         channels = 'MEG';
         decoding_window = [-0.2 0.9];
         window_length = 1;
+        time = [];
         
     end
     
@@ -17,6 +18,7 @@ classdef decoding_args
                 obj.channels = varargin{1};
                 obj.decoding_window = varargin{2};
                 obj.window_length = varargin{3};
+                obj.time = varargin{4};
             end;
         end
         

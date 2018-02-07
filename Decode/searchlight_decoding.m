@@ -21,8 +21,6 @@ for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 
-addParameter(p,'time',[]);
-
 parse(p, varargin{:});
 dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time'}); %converted struct will be fed into decoding function
@@ -42,6 +40,11 @@ elseif isfield(cluster_idx, 'time')
     time = cluster_idx.time;
 else
     time = 1:size(data,2);
+end;
+
+if length(time)~=size(data,2)
+    time = 1:size(data,2);
+    fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
 end;
 
 %time limits for decoding window

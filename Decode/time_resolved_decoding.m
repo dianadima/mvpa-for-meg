@@ -22,7 +22,7 @@ end;
 
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time'}); %converted struct will be fed into decoding function
 clear p;
 
 %get channel indices and time axis. Numerical channel indices take priority
@@ -41,13 +41,26 @@ if ~isempty(sensor_idx)
             chan_idx = chan;
         end;
     end;
-    time = sensor_idx.time;
 else
     if ~exist('chan_idx', 'var')
         chan_idx = 1:size(data,1);
     end;
+end;
+
+%create time axis
+if ~isempty(dec_args.time)
+    time = dec_args.time;
+elseif isfield(sensor_idx, 'time')
+    time = sensor_idx.time;
+else
     time = 1:size(data,2);
 end;
+
+if length(time)~=size(data,2)
+    time = 1:size(data,2);
+    fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
+end;
+
 
 if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
