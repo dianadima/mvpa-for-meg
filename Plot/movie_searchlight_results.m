@@ -44,8 +44,8 @@ if ~isempty(dec_args.decoding_window)
         fprintf('Warning: starting timepoint not found. Starting from 1...');
         lims(1) = 1;
     end;
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
+    if ~isempty(find(round(time,3)==dec_args.decoding_window(end),1))
+        lims(2) = find(round(time,3)==dec_args.decoding_window(end));
     else
         fprintf('Warning: end timepoint not found. Plotting til the end...');
         lims(2) = length(time);
@@ -90,9 +90,9 @@ for i = 1:size(acc,2)
     ft_topoplotER(cfg,sens);
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
     c = colorbar; c.Label.String = dec_args.result_type;
-     if ~isempty(dec_args.time)
-         text(-0.5,-0.5, pad(num2str(round(dec_args.time(i),3)),10), 'FontWeight', 'normal');
-     end;
+    if ~isempty(dec_args.time)
+        text(-0.5,-0.5, pad(num2str(round(dec_args.time(i),3)),10), 'FontWeight', 'normal');
+    end;
     F(i) = getframe(gcf);
 end;
 

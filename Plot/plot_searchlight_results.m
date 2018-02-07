@@ -36,8 +36,8 @@ if ~isempty(dec_args.decoding_window)
         fprintf('Warning: starting timepoint not found. Starting from 1...');
         lims(1) = 1;
     end;
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
+    if ~isempty(find(round(time,3)==dec_args.decoding_window(end),1))
+        lims(2) = find(round(time,3)==dec_args.decoding_window(end));
     else
         fprintf('Warning: end timepoint not found. Plotting til the end...');
         lims(2) = length(time);

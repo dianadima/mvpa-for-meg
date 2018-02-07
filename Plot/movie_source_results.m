@@ -1,4 +1,5 @@
-function [vid_obj] = movie_source_results( results, output_file, varargin )
+function [] = movie_source_results( results, output_file, varargin )
+%Changed display fct - test
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % Need to add capability for ROI and searchlight plotting
@@ -41,8 +42,14 @@ cfg.camlight = 'no';
 F(size(acc,2)) = struct('cdata',[],'colormap',[]);
 for i = 1:size(results,2)
     sourcemodel.acc(sourcemodel.inside) = acc(:,i);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
     ft_sourceplot(cfg,sourcemodel);
-    F(i) = getframe(gca);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
+    c = colorbar; c.Label.String = dec_args.result_type;
+    if ~isempty(dec_args.time)
+        text(-0.5,-0.5, pad(num2str(round(dec_args.time(i),3)),10), 'FontWeight', 'normal');
+    end;
+    F(i) = getframe(gcf);
 end;
 
 vid_obj = VideoWriter(output_file);
