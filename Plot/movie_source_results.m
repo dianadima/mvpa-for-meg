@@ -23,7 +23,7 @@ elseif ndims(results)==3
     acc = squeeze(mean(results,1));
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
-    error('Results should be a 2d or 3d matrix containing subjects x time x channels');
+    error('Results should be a 2d or 3d matrix containing subjects x channels x time');
 end;
 
 cfg = [];
@@ -38,9 +38,9 @@ cfg.surffile = 'surface_white_both.mat';
 cfg.visible = 'off';
 cfg.camlight = 'no';
 
-F(size(acc,1)) = struct('cdata',[],'colormap',[]);
-for i = 1:size(results,1)
-    sourcemodel.acc(sourcemodel.inside) = acc(i,:)';
+F(size(acc,2)) = struct('cdata',[],'colormap',[]);
+for i = 1:size(results,2)
+    sourcemodel.acc(sourcemodel.inside) = acc(:,i);
     ft_sourceplot(cfg,sourcemodel);
     F(i) = getframe(gca);
 end;

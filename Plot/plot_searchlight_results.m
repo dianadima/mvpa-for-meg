@@ -11,7 +11,8 @@ for i = 1:length(properties(decoding_args))
 end;
 addParameter(p, 'clim', [40 100]);
 addParameter(p, 'colormap', 'jet');
-addParameter(p,'time',[]);
+addParameter(p, 'highlight_channels', []);
+addParameter(p, 'configuration', 'CTF275');
 parse(p, varargin{:});
 dec_args = p.Results;
 
@@ -22,9 +23,9 @@ elseif isfield(neighbours, 'time')
     time = neighbours.time;
 else
     if ismatrix(results)
-        time = 1:size(data,1);
+        time = 1:size(results,2);
     elseif ndims(results)==3
-        time = 1:size(data,2);
+        time = 1:size(results,3);
     end;
 end;
 
@@ -56,11 +57,11 @@ elseif ndims(results)==3
     acc = squeeze(mean(results,1));
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
-    error('Results should be a 2d or 3d matrix containing subjects x time x channels');
+    error('Results should be a 2d or 3d matrix containing subjects x channels x time');
 end;
 
 %create structure for plotting
-sens.acc = acc';
+sens.acc = acc;
 sens.label = {neighbours(:).label};
 sens.dimord = 'chan_time';
 sens.time = time;
@@ -70,13 +71,20 @@ if numel(cfg.xlim)==1
     cfg.xlim(2) = cfg.xlim(1);
 end;    
 cfg.zlim = dec_args.clim;
-cfg.layout = 'CTF275.lay';
+cfg.layout = [dec_args.configuration '.lay'];
 cfg.parameter = 'acc';
 cfg.style = 'straight';
 cfg.comment = 'no';
-%cfg.commentpos = 'title';
 cfg.interactive = 'no';
 cfg.colormap = dec_args.colormap;
+if ~isempty(dec_args.highlight_channels)
+    cfg.highlight = 'on';
+    cfg.highlightchannel = dec_args.highlight_channels;
+    cfg.highlightmarker = 'o';
+    cfg.highlightcolor = [1 1 1];
+    cfg.highlightsize = 8;
+end;
+
 ft_topoplotER(cfg,sens)
 
 end
