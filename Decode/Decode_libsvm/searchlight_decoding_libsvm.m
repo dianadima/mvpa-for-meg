@@ -1,4 +1,4 @@
-function [ accuracy, Fscore] = searchlight_decoding_nonlinear( data, labels, cluster_idx, varargin )
+function [ accuracy, Fscore] = searchlight_decoding_libsvm( data, labels, cluster_idx, varargin )
 % Inputs: data, labels, cluster_idx (neighbourhood structure or source indices obtained using get_sensor_info or get_source_info).
 % Optional: channel set (string or  cell array of strings; default: 'MEG'), 
 % decoding window (limits; default: [-0.1 0.9])
