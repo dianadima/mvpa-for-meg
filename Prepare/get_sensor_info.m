@@ -1,10 +1,11 @@
 function [neighbours] = get_sensor_info( dataset, varargin )
-% Inputs: dataset, output file path. Optional: 
-%  decoding_window: decoding window or window of
-%         interest (to save time axis for use in plotting etc.). If empty, whole
-%         axis saved.
+% Gets sensor grouping structure, time axis and channel labels from MEG dataset.
+% Input: dataset. 
+% Optional inputs: 
+%  decoding_window: decoding window or window of interest (to save time axis for use in plotting etc.). 
+%                   If empty, whole axis saved.
 %  sample_rate: sampling rate - If you are going to resample the data, this
-%         need to be provided, otherwise you'll get a time axis based on the dataset sampling rate.
+%         needs to be provided, otherwise you'll get a time axis based on the dataset sampling rate.
 % Output: sensor neighbour structure (includes labels, neighbours, and time).
 % Uses Fieldtrip toolbox (Oostenveld et al., 2011).
 

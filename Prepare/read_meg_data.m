@@ -2,8 +2,7 @@ function [data] = read_meg_data(dataset, condition, varargin)
 % Inputs: dataset, condition; optional: prestimulus, poststimulus,
 % baseline, bandpass filter, resampling frequency
 % Output: preprocessed MEG data. Channels x time x trials matrix.
-% Uses fieldtrip toolbox (Oostenveld et al., 2011) to read in MEG data
-% for a specified condition.
+% Uses fieldtrip toolbox (Oostenveld et al., 2011) to read in MEG data for a specified condition.
 
 opt = preproc_args;
 list = fieldnames(opt);

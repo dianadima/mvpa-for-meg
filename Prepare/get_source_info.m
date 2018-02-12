@@ -1,11 +1,12 @@
 function [source_idx, labels] = get_source_info(varargin)
-%Gets indices of source clusters to go into a searchlight analysis.
-%Inputs: output file name & path.
-%Make sure to use same sourcemodel as for the beamformer analysis! 
-%Optional inputs: 
-% source_selection: selection of sources(all, inside or aal90; default: inside)
-% resolution: spatial resolution of searchlight(default: 10 mm);
-% sourcemodel: which FT template sourcemodel to use (default:10 mm). Can be 4,5,6,7.5,8,10. 
+% Gets indices of source clusters to go into a searchlight analysis.
+% Make sure to use same sourcemodel as for the beamformer analysis! 
+% Optional inputs: 
+%   source_selection: selection of sources(all, inside or aal90; default: inside)
+%   resolution: spatial resolution of searchlight(default: 10 mm);
+%   sourcemodel: full path to the sourcemodel to use (default: Fieldtrip 10 mm template). 
+% Outputs: channel array containing source indices for each cluster; labels - only for aal90 option - ROI labels for the 90 clusters. 
+
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;

@@ -1,8 +1,12 @@
 function [ newdata, newlabels ] = create_pseudotrials( data, labels, n_trials, n_perm)
-%Creates averages of trials to increase SNR for multivariate analysis.
-% Make sure that last dimension of data is trial dimension.
-% Optional parameter: cell array containing indices of trials
-% belonging to each condition. Example {1:40, 41:80}.
+% Creates averages of trials to increase SNR for multivariate analysis.
+% (!) Make sure that last dimension of data is trial dimension.
+% Inputs:
+%       data = n-dimensional matrix with trials as last dimension.
+%       labels = class labels, of same length as last dimension of data. Any number of classes is supported.
+%       n_trials = number of trials to average together (e.g., 5).
+%       n_perm = number of times to repeat the averaging with random assignment of trials to subgroups.
+%                 If n_perm > 1, output will contain permutations x data x trials.
 
 trldim = ndims(data); %trials is last dimension, usually convenient for fieldtrip
 sz = [trldim 1:trldim-1]; data = permute(data, sz); %move trials to first dimension
