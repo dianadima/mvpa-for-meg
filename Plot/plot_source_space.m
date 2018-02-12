@@ -1,6 +1,15 @@
 function [ ] = plot_source_space( accuracy, source_idx, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% Plot source-space decoding results.
+% Inputs: accuracy (or other metric of choice); must be a vector with the right number of sources.
+%         source_idx: cell array obtained from get_source_info, shows where
+%         each source belongs in a searchlight approach. Can be left empty
+%         if your accuracy vector contains all sources.
+% Optional inputs:
+%         'sourcemodel', default is the template 10 mm Fieldtrip sourcemodel. Can specify any full path to a sourcemodel file.
+%         'colormap', default 'jet'.
+%         'colorlim', default [40 100].
+%         'visible', default 'on' - open figure window or not. 
+
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;

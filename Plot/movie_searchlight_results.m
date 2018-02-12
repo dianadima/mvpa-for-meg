@@ -1,9 +1,14 @@
 function [ ] = movie_searchlight_results( results, neighbours, output_file, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% Plot sensor-space searchlight decoding results as a movie.
+% Inputs: results: matrix of accuracy/decoding performance. Must be channels x time, or subjects x channels x time.
+%         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).
+%         output_file: movie filename
+% Optional inputs:
+%   'configuration' (default 'CTF275'): specify configuration of sensors. The fieldtrip layout <configuration>.lay will be loaded for plotting.
+%   'clim' (default [40 100]): colour limits
+%   'colormap' (default 'jet')
+%   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
 
-%default neighbours structure is ctf 275; if you have a diff number of
-%sensors you need to specify it
 if isempty(neighbours)
     [~, ftdir] = ft_version; %get FT directory
     load([ftdir '/template/neighbours/ctf275_neighb.mat']);

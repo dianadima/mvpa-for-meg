@@ -1,6 +1,18 @@
 function [ ] = plot_searchlight_results(results, neighbours, varargin)
-%UNTITLED8 Summary of this function goes here
-%   Detailed explanation goes here
+% Plots results of sensor-space searchlight decoding.
+% Inputs: results: matrix of accuracy/decoding performance. Must be channels, channels x time, or subjects x channels x time.
+%         Note that if you specify a 'window_length'>1, accuracy will be averaged over the time window (because it uses ft_topoplotER). 
+%         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).
+% Optional inputs:
+%   'configuration' (default 'CTF275'): specify configuration of sensors. The fieldtrip layout <configuration>.lay will be loaded for plotting.
+%   'clim' (default [40 100]): colour limits
+%   'colormap' (default 'jet')
+%   'highlight_channels', significant channels can be marked with white asterisks. Cell array of strings (e.g., {'MRO18', 'MRO19'}.
+%   'time', time axis, if you wish to specify time units, rather than sampled points.
+%   'decoding_window', which portion of the data is being plotted.
+%   'window_length', what size time window is included in one plot. This may lead to multiple plots. With a decoding window of [0 1] and a
+%                   window length of 0.5, you will get two plots showing 50 ms each (time axis will become 0:0.5:1).
+
 
 dec_args = decoding_args;
 dec_args.window_length = 0.05; %just this one different than default

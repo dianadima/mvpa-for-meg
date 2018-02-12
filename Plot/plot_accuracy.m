@@ -1,10 +1,27 @@
 function [ ] = plot_accuracy( accuracy, errorbar, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% Plot decoding accuracy (or other metric) over time, using transparent shading for the error bar.
+% Function can be called in a loop to plot multiple accuracies on top of each other.
+%
+% Inputs: accuracy and errorbar (e.g., standard deviation or SEM to be added to & subtracted from accuracy). Both same length
+% Optional inputs:
+%       'time', time axis; will be plotted on X axis and needs to match length of accuracy and errorbar vectors.
+%       'signif', significant time points, will be underlined with horizontal lines and onset marked with vertical bars. Must be in same unit as x-axis
+%       'signif_ylocation', location of vertical lines marking significance on the y-axis (default 47). Especially useful if calling this function in a loop.
+%       'color', accuracy & errorbar color, default 'k', black.
+%       'linewidth', accuracy line width (default 1.5)
+%       'smooth', factor by which to smooth the accuracy with a moving average (default 1 - no smoothing)
+%       'ylim', default [40 100]
+%       'xlim', default [] (data-driven)
+%       'ylabel', default 'Accuracy (%)'
+%       'xlabel', default 'Time (s)'
+%       'legend' - specify string corresponding to the accuracy plotted. If function is called in a loop, 
+%                   legends will be appended, such that the final plot will have the complete legend of plotted accuracies. Default, [] (none). (Semidocumented function DynamicLegend used here)    
+
 p = inputParser;
 addParameter(p, 'time',[]);
 addParameter(p, 'color', 'k');
 addParameter(p, 'signif', []);
+addParameter(p,'signif_ylocation', 47);
 addParameter(p, 'smooth', 1);
 addParameter(p, 'ylim', [40 100]);
 addParameter(p, 'xlim', []);
@@ -46,10 +63,10 @@ end;
 pl = plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth, 'DisplayName', p.Results.legend); hold on; hasbehavior(pl, 'legend', true);
 
 if ~isempty(p.Results.signif)
-    for j = 1:size(p.Results.signif,1)
-        l3 = line([p.Results.signif(j,1) p.Results.signif(j,2)], p.Results.ylim+5, 'color', p.Results.color, 'LineWidth', 2); hold on; hasbehavior(l3, 'legend', false);
+    for j = 1:length(p.Results.signif)
+        l3 = line([p.Results.signif(j) p.Results.signif(j)+0.0001], [p.Results.signif_ylocation p.Results.signif_ylocation], 'color', p.Results.color, 'LineWidth', 2); hasbehavior(l3, 'legend', false); hold on; 
     end;
-    l4 = line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color); hold on; hasbehavior(l4, 'legend', false);
+    l4 = line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color); hold on; hasbehavior(l4, 'legend', false); hold on; 
 end;
 
 ylim(p.Results.ylim);
