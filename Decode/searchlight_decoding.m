@@ -1,12 +1,14 @@
 function [ accuracy, Fscore] = searchlight_decoding( data, labels, cluster_idx, varargin )
 % Inputs: data, labels, cluster_idx (neighbourhood structure or source indices obtained using get_sensor_info or get_source_info).
-% Optional: channel set (string or  cell array of strings; default: 'MEG'), 
-% decoding window (limits; default: [-0.1 0.9])
-% and window length (in sampled time points; default here:10);
-% SVM settings, svm evaluation metrics (see Documentation).
+% Optional: 
+%          'channels', channel set set (string or cell array of strings; default: 'MEG'). 
+%          'decoding_window' (limits; default: [] - all timepoints). In  sampled time points (OR in seconds - only if you also provide time axis).
+%          'window_length' (in sampled time points; default: 1).
+%          'time', time axis, if you want to give the decoding window in seconds, you also need to provide a time axis, matching the second dimension of the data).
+%           other possible name-value pairs: SVM settings, svm evaluation metrics (see Documentation).
 % Output: time and space-resolved accuracy and F1-score (channels x time).
-% Performs time and space-resolved SVM decoding of MEG data. Uses
-% sensor neighbours defined using FT template configuration (or custom structure containing source indices).
+% Performs time and space-resolved SVM decoding of MEG data, using stratified k-fold cross-validation and LibLinear for each time window and sensor cluster.
+% Uses sensor neighbours defined using FT template configuration (or custom structure containing source indices).
 
 %parse inputs
 dec_args = decoding_args;
@@ -74,6 +76,7 @@ accuracy = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)
 Fscore = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1));
 fprintf('\nRunning searchlight '); 
 
+%loop through channels and time
 for c = 1:length(chan_idx)
     
     fprintf('%d out of %d', c, length(chan_idx));

@@ -1,7 +1,7 @@
 function [ accuracy, random_results ] = randomize_svm( data, labels, num_iterations, varargin)
 % Inputs: data, labels, number of randomization iterations desired (i.e. 1000) + svm decoding parameters (for kfold crossvalidation).
 % If you want to randomize holdout accuracy, the last 2 arguments should be a test set and test labels.
-% Outputs: randomized accuracy and (optional) entire results structure for each iteration.
+% Outputs: randomized accuracy and entire results structure for each iteration.
 % Classification on randomized data (shuffles labels across training and test sets).
 
 accuracy = zeros(1,num_iterations);
