@@ -90,11 +90,18 @@ if size(data,2)<lims(2)
 end;
 
 %here we create a cell array containing classification data for each time window
-data_svm = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,:), length(chan_idx)*dec_args.window_length, size(data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
-results = zeros(length(data_svm), length(data_svm));
+%we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used
+classes = unique(labels); idx1 = find(labels==classes(1)); idx2 = find(labels==classes(2));
+train_idx = [idx1(randperm(floor(length(idx1)/2))); idx2(randperm(floor(length(idx2)/2)))];
+test_idx = [idx1; idx2]; test_idx(train_idx) = [];
+
+train_data = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,train_idx), length(chan_idx)*dec_args.window_length, length(train_idx))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
+test_data = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,test_idx), length(chan_idx)*dec_args.window_length, length(test_idx))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
+
+results = zeros(length(train_data), length(train_data));
 
 %and here we run the classifier -first train on all time points and store the models
-svm_model = arrayfun(@(t) svm_train(data_svm{t}, labels, svm_par), 1:length(data_svm), 'UniformOutput', false);
+svm_model = arrayfun(@(t) svm_train(train_data{t}, labels(train_idx), svm_par), 1:length(train_data), 'UniformOutput', false);
 fprintf('\nFinished training all models...\r')  
 fprintf('\rNow testing...\r')
 
@@ -105,14 +112,14 @@ for t = 1:length(svm_model)
         fprintf('\n%d out of %d...\n', t, length(svm_model))
     end;
     
-    for i = 1:length(data_svm)
+    for i = 1:length(test_data)
         
         %standardize test data, using values based on training data
         if svm_par.standardize
-            test_data = (data_svm{i} - repmat(min(data_svm{t}, [], 1), size(data_svm{i}, 1), 1)) ./ repmat(max(data_svm{t}, [], 1) - min(data_svm{t}, [], 1), size(data_svm{i}, 1), 1);
+            test_data_i = (test_data{i} - repmat(min(train_data{t}, [], 1), size(test_data{i}, 1), 1)) ./ repmat(max(train_data{t}, [], 1) - min(train_data{t}, [], 1), size(test_data{i}, 1), 1);
         end;
         
-        [~, accuracy, ~] = predict(labels, sparse(test_data), svm_model{t}, '-q 1');
+        [~, accuracy, ~] = predict(labels(test_idx), sparse(test_data_i), svm_model{t}, '-q 1');
         results(t,i) = accuracy(1);
 
     end;
