@@ -1,5 +1,5 @@
 function [ results ] = temp_gen_decoding( data, labels, varargin )
-% Performs temporal generalization SVM decoding of MEG data (train on each time point/window, test on all others).
+% Performs temporal generalization SVM decoding of MEG data (train on each time point/window, test on all others). Uses hold-out validation (train on half, test on half).
 % Inputs: data, labels.
 % Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. You can also just provide numerical indices, in which case you don't need the structure. 
 %                        If you want to subselect features on source space data, you need to manually provide numerical indice (i.e. 'channels', [1:1000]). 
@@ -34,17 +34,14 @@ clear p;
 if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
 end;
-if ~isempty(dec_args.sensor_idx)
+if (~isempty(dec_args.sensor_idx)) && (~strcmp (dec_args.channels, 'MEG'))
     if ~exist('chan_idx', 'var')
-        chan_idx = 1:size(data,1); %initialize with entire array
-        if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
-            chan = [];
-            for i = 1:length(dec_args.channels)
-                idx = cellfun('isempty',strfind({sensor_idx.label},dec_args.channels{i}));
-                chan = [chan chan_idx(~idx)]; %#ok<AGROW>
-            end;
-            chan_idx = chan;
+        chan = [];
+        for i = 1:length(dec_args.channels)
+            idx = cellfun('isempty',strfind({sensor_idx.label},dec_args.channels{i}));
+            chan = [chan chan_idx(~idx)]; %#ok<AGROW>
         end;
+        chan_idx = chan;
     end;
 else
     if ~exist('chan_idx', 'var')
