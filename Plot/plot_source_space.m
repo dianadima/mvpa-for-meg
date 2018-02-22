@@ -13,16 +13,18 @@ function [ ] = plot_source_space( accuracy, source_idx, varargin )
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;
-addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel10mm'));
+addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d10mm.mat'));
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'visible', 'on');
+addParameter(p, 'inflated', true);
+addParameter(p, 'hemisphere', 'both');
 parse(p, varargin{:});
 
-if size(accuracy,1)>1
-    accuracy = accuracy';
+if size(accuracy,1)>1 && size(accuracy,2)>1
+    error('The parameter you wish to plot must be a vector')
 end;
-
+    
 %load sourcemodel
 if ischar(p.Results.sourcemodel)
     [~,~,ext] = fileparts(p.Results.sourcemodel);
@@ -73,8 +75,12 @@ cfg.funcolormap = p.Results.colormap;
 cfg.funcolorlim = p.Results.colorlim;
 cfg.opacitylim = p.Results.colorlim;
 cfg.opacitymap = 'rampup';
-cfg.projmethod = 'nearest';
-cfg.surffile = 'surface_white_both.mat';
+cfg.projmethod = 'project';
+cfg.projvec = 3;
+cfg.surffile = ['surface_white_' p.Results.hemisphere '.mat'];
+if p.Results.inflated
+    cfg.surfinflated = ['surface_inflated_' p.Results.hemisphere '.mat'];
+end;
 cfg.camlight = 'no';
 cfg.visible = p.Results.visible;
 
