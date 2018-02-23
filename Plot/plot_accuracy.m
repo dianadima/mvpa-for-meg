@@ -54,13 +54,17 @@ else
     error('The errorbar can contain one or two row vectors');
 end;
 
-l0 = patch([time fliplr(p.Results.time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none'); hasbehavior(l0, 'legend', false);
+l0 = patch([time fliplr(time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none'); hasbehavior(l0, 'legend', false);
 alpha 0.15; hold on; 
-l1 = line([time(1) p.Results.time(end)], [50 50], 'color', [0.5 0.5 0.5]); hold on; hasbehavior(l1, 'legend', false);
+l1 = line([time(1) time(end)], [50 50], 'color', [0.5 0.5 0.5]); hold on; hasbehavior(l1, 'legend', false);
 if ~isempty(time==0)
     l2 = line([0 0], [p.Results.ylim(1) p.Results.ylim(2)], 'color', [0.5 0.5 0.5]); hasbehavior(l2, 'legend', false);
 end;
-pl = plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth, 'DisplayName', p.Results.legend); hold on; hasbehavior(pl, 'legend', true);
+if ~isempty(p.Results.legend)
+    pl = plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth, 'DisplayName', p.Results.legend); hold on; hasbehavior(pl, 'legend', true);
+else
+    plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth); hold on; 
+end;
 
 if ~isempty(p.Results.signif)
     for j = 1:length(p.Results.signif)
