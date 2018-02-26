@@ -9,6 +9,7 @@ function [ ] = plot_source_space( accuracy, source_idx, varargin )
 %         'colormap', default 'jet'.
 %         'colorlim', default [40 100].
 %         'visible', default 'on' - open figure window or not. 
+%         'roi', default [], mask all ROIs except this (AAL ROI string)
 
 [~, ftdir] = ft_version; %get FT directory
 
@@ -18,6 +19,7 @@ addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'visible', 'on');
 addParameter(p, 'inflated', true);
+addParameter(p, 'roi', []);
 addParameter(p, 'hemisphere', 'both');
 parse(p, varargin{:});
 
@@ -40,7 +42,7 @@ if ~isfield(sourcemodel, 'inside')
     sourcemodel.inside = true(size(sourcemodel.pos,1),1);
 end;
 sourcemodel = ft_convert_units(sourcemodel, 'mm');
-
+sourcemodel.coordsys = 'mni';
 if isempty(source_idx)
     
     if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= length(accuracy)
@@ -62,7 +64,7 @@ else
     
     inside(outside_idx) = NaN;
     
-    sourcemodel.pow = NaN(1,size(sourcemodel.pos,1));
+    sourcemodel.pow = NaN(1,size(sourcemodel.pos,1))';
     sourcemodel.pow(sourcemodel.inside) = inside;
     
 end;
@@ -70,13 +72,19 @@ end;
 cfg = [];
 cfg.method = 'surface'; 
 cfg.funparameter = 'pow';
-cfg.maskparameter = 'pow';
+if isempty(p.Results.roi)
+    cfg.maskparameter = 'pow';
+end;
 cfg.funcolormap = p.Results.colormap;
 cfg.funcolorlim = p.Results.colorlim;
 cfg.opacitylim = p.Results.colorlim;
 cfg.opacitymap = 'rampup';
 cfg.projmethod = 'project';
 cfg.projvec = 3;
+if ~isempty(p.Results.roi)
+    cfg.atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii']);
+    cfg.roi = p.Results.roi;
+end;
 cfg.surffile = ['surface_white_' p.Results.hemisphere '.mat'];
 if p.Results.inflated
     cfg.surfinflated = ['surface_inflated_' p.Results.hemisphere '.mat'];

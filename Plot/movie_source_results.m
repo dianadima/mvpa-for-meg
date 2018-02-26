@@ -18,6 +18,7 @@ addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'visible', 'on');
 addParameter(p, 'inflated', true);
 addParameter(p, 'hemisphere', 'both');
+addParameter(p, 'roi', []);
 addParameter(p, 'result_type', 'Accuracy (%)');
 parse(p, varargin{:});
 
@@ -45,7 +46,7 @@ if ~isfield(sourcemodel, 'inside')
     sourcemodel.inside = true(size(sourcemodel.pos,1),1);
 end;
 sourcemodel = ft_convert_units(sourcemodel, 'mm');
-
+sourcemodel.coordsys = 'mni';
 if isempty(source_idx)
     
     if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= size(accuracy,1)
@@ -80,13 +81,18 @@ end;
 cfg = [];
 cfg.method = 'surface'; 
 cfg.funparameter = 'pow';
-cfg.maskparameter = 'pow';
+if isempty(p.Results.roi)
+    cfg.maskparameter = 'pow';
+end;
 cfg.funcolormap = p.Results.colormap;
 cfg.funcolorlim = p.Results.colorlim;
 cfg.opacitylim = p.Results.colorlim;
 cfg.opacitymap = 'rampup';
 cfg.projmethod = 'project';
 cfg.projvec = 3;
+if ~isempty(p.Results.roi)
+    cfg.atlas = ft_read_atlas([ftdir '/template/atlas/aal/ROI_MNI_V4.nii']);
+end;
 cfg.surffile = ['surface_white_' p.Results.hemisphere '.mat'];
 if p.Results.inflated
     cfg.surfinflated = ['surface_inflated_' p.Results.hemisphere '.mat'];
@@ -98,9 +104,12 @@ cfg.visible = 'on';
 F(size(acc,2)) = struct('cdata',[],'colormap',[]);
 for i = 1:size(accuracy,2)
     sourcemodel.pow = pow(:,i);
+    cfg.roi = p.Results.roi{i};
     ft_sourceplot(cfg,sourcemodel);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
     c = colorbar; c.Label.String = p.Results.result_type;
     F(i) = getframe(gcf);
+    close;    
 end;
 
 vid_obj = VideoWriter(output_file);
