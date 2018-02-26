@@ -24,7 +24,11 @@ else
     trlsize = zeros(1,n_cond);
     for i = 1:n_cond
         idx{i,1} = find(labels==classes(i));
-        trlsize(i) = floor(length(find(labels==classes(i)))/n_trials);
+        if length(idx{i,1})>1
+            trlsize(i) = floor(length(find(labels==classes(i)))/n_trials);
+        else
+            trlsize(i) = length(idx{i,1});
+        end;
     end;
     trlsize = sum(trlsize);
 end;
@@ -40,18 +44,27 @@ for p = 1:n_perm
     for c = 1:n_cond
     
         tmpdata = data(idx{c,:});
-        tmpdata = shuffle(tmpdata, 1);
-        tp = 1:n_trials:size(tmpdata, 1)-n_trials+1;
-        tmpsz = [length(tp) sz(2:end)]; 
-        avedata = zeros(tmpsz);
-        tmpidx = idx;
         
-        for t = 1:length(tp)
+        if size(tmpdata,1)>1 %do we have more than 1 trial?
             
-            tmpidx{c,1} = tp(t):tp(t)+n_trials-1;
-            pseudo = tmpdata(tmpidx{c,:});
-            pseudo = squeeze(nanmean(pseudo,1));
-            avedata(t,:) = pseudo(:);
+            tmpdata = shuffle(tmpdata, 1);
+            tp = 1:n_trials:size(tmpdata, 1)-n_trials+1;
+            tmpsz = [length(tp) sz(2:end)];
+            avedata = zeros(tmpsz);
+            tmpidx = idx;
+            
+            for t = 1:length(tp)
+                
+                tmpidx{c,1} = tp(t):tp(t)+n_trials-1;
+                pseudo = tmpdata(tmpidx{c,:});
+                pseudo = squeeze(nanmean(pseudo,1));
+                avedata(t,:) = pseudo(:);
+                
+            end;
+            
+        else
+            
+            avedata = tmpdata;
             
         end;
         

@@ -38,14 +38,17 @@ svm_model = train(train_labels, sparse(train_data), sprintf('-s %d -c %d -q 1', 
 
 results.Accuracy = accuracy(1);
 results.AccuracyMSError = accuracy(2);
+results.Confusion = zeros(2,2);
 results.Confusion = confusionmat(test_labels,scores);
 results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
-results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
 PP = results.Confusion(1,1)/(sum(results.Confusion(:,1))); %positive predictive value: class1
-NP = results.Confusion(2,2)/(sum(results.Confusion(:,2))); %negative predictive value: class2
-results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);
-results.Fscore2 = (2*NP*results.Specificity)/(NP+results.Specificity);
-results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:)))*results.Fscore1) + ((sum(results.Confusion(:,2))/sum(results.Confusion(:)))*results.Fscore2);
+if numel(results.Confusion)>1
+    results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
+    NP = results.Confusion(2,2)/(sum(results.Confusion(:,2))); %negative predictive value: class2
+    results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);
+    results.Fscore2 = (2*NP*results.Specificity)/(NP+results.Specificity);
+    results.WeightedFscore = ((sum(results.Confusion(:,1))/sum(results.Confusion(:)))*results.Fscore1) + ((sum(results.Confusion(:,2))/sum(results.Confusion(:)))*results.Fscore2);
+end;
 
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights
