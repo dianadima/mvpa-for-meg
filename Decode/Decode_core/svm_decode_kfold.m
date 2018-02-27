@@ -30,6 +30,10 @@ if abs(nargin)<2
     error('Data and labels are needed as inputs.')
 end;
 
+if ~isa(data, 'double')
+    data = double(data);
+end;
+
 results = struct;
 
 for icv = 1: svm_par.iterate_cv

@@ -23,8 +23,15 @@ parse(p, varargin{:});
 svm_par = p.Results;
 clear p;
 
-if abs(nargin)<2
-    error('Data and labels are needed as inputs.')
+if abs(nargin)<4
+    error('Separate training and testing data and labels are needed as inputs.')
+end;
+
+if ~isa(train_data, 'double')
+    train_data = double(train_data);
+end;
+if ~isa(test_data, 'double')
+    test_data = double(test_data);
 end;
 
 %scale values using range and minimum of training set
