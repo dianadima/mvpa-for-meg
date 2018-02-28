@@ -1,19 +1,22 @@
-function [ ] = plot_source_space( accuracy, source_idx, varargin )
+function [ ] = plot_source_space( accuracy, varargin )
 % Plot source-space decoding results.
 % Inputs: accuracy (or other metric of choice); must be a vector with the right number of sources.
-%         source_idx: cell array obtained from get_source_info, shows where
-%         each source belongs in a searchlight approach. Can be left empty
-%         if your accuracy vector contains all sources.
+%         
 % Optional inputs:
+%         'source_idx': cell array obtained from get_source_info, shows where
+%                       each source belongs in a searchlight/AAL approach.
 %         'sourcemodel', default is the template 10 mm Fieldtrip sourcemodel. Can specify any full path to a sourcemodel file.
 %         'colormap', default 'jet'.
 %         'colorlim', default [40 100].
 %         'visible', default 'on' - open figure window or not. 
 %         'roi', default [], mask all ROIs except this (AAL ROI string)
+%         'inflated', default true - inflated surface or regular
+%         'hemisphere', default 'both' (can be 'right', 'left', or 'both')
 
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;
+addParameter(p, 'source_idx', []);
 addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d10mm.mat'));
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
@@ -43,6 +46,9 @@ if ~isfield(sourcemodel, 'inside')
 end;
 sourcemodel = ft_convert_units(sourcemodel, 'mm');
 sourcemodel.coordsys = 'mni';
+
+source_idx = p.Results.source_idx;
+
 if isempty(source_idx)
     
     if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= length(accuracy)
