@@ -7,7 +7,10 @@ function [ newdata, newlabels ] = create_pseudotrials( data, labels, n_trials, n
 %       n_trials = number of trials to average together (e.g., 5).
 %       n_perm = number of times to repeat the averaging with random assignment of trials to subgroups.
 %                 If n_perm > 1, output will contain permutations x data x trials.
-
+% If number of permutations is >1, it returns data (features x trials x
+% permutations) and labels (trials x permutations). Otherwise returns data
+% (features x trials) and labels (trials column vector).
+%
 trldim = ndims(data); %trials is last dimension, usually convenient for fieldtrip
 sz = [trldim 1:trldim-1]; data = permute(data, sz); %move trials to first dimension
 sz = size(data); %store new size
@@ -35,7 +38,7 @@ end;
 
 newsz = [n_perm trlsize sz(2:end)];
 newdata = zeros(newsz);
-newlabels = [];
+newlabels = cell(1,n_perm);
     
 for p = 1:n_perm
     
@@ -70,9 +73,7 @@ for p = 1:n_perm
         
         condata = cat(1, condata, avedata);
                 
-        if p==1 %no need to do this for each permutation
-            newlabels = [newlabels; c*ones(size(avedata,1),1)]; %#ok<AGROW>
-        end;
+        newlabels{p} = [newlabels{p}; c*ones(size(avedata,1),1)]; 
     
     end;
     
@@ -81,8 +82,10 @@ for p = 1:n_perm
 end;
 
 %reshape into data*pseudotrials (over permutations)
-newsz = 1:length(newsz); newsz(length(newsz)+1) = 2; newsz(2)=[]; 
+newsz = 1:length(newsz); newsz(length(newsz)+1) = 2; newsz(length(newsz)+1) = 1; newsz(1:2)=[]; 
 newdata = permute(newdata, newsz); %trials are last dim
 newdata = squeeze(newdata); %one permutation case
+newlabels = cat(2,newlabels{:});
+
 
 end
