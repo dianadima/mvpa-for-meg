@@ -1,4 +1,4 @@
-function [ results ] = searchlight_kfold( data, labels, cluster_idx, varargin )
+function [ rand_accuracy ] = searchlight_kfold_rand( data, labels, cluster_idx, num_iterations, varargin )
 % Inputs: data, labels, cluster_idx (neighbourhood structure or source indices obtained using get_sensor_info or get_source_info).
 % Optional: 
 %          'channels', channel set set (string or cell array of strings; default: 'MEG'). 
@@ -43,25 +43,8 @@ end;
 fprintf('\nRunning %d searchlights...\n', length(chan_idx)); 
 
 data_svm = arrayfun(@(i) data(chan_idx{i}, :,:), 1:length(chan_idx), 'UniformOutput', false); %channel and time selection
-res = arrayfun(@(i) time_resolved_kfold(data_svm{i}, labels, dec_args, svm_par), 1:length(data_svm));
-
-%put results in a human-friendly format
-results.Accuracy = cell2mat({res.Accuracy}');
-results.AccuracyMSError = cell2mat({res.AccuracyMSError}');
-results.AccuracyFold = cell2mat({res.AccuracyFold}');
-results.Confusion = {res.Confusion}';
-results.Sensitivity = cell2mat({res.Sensitivity}');
-results.Specificity = cell2mat({res.Specificity}');
-results.Fscore1 = cell2mat({res.Fscore1}');
-results.Fscore2 = cell2mat({res.Fscore2}');
-results.WeightedFscore = cell2mat({res.WeightedFscore}');
-results.cv_indices = cell2mat({res.cv_indices}');
-if isfield(res, 'Weights')
-    results.Weights = cell2mat({res.Weights}'); %this puts together weights from all searchlights for each timepoit
-    results.WeightPatterns = cell2mat({res.WeightPatterns}');
-    results.WeightPatternsNorm = cell2mat({res.WeightPatternsNorm}');
-end;
-
+accuracy = arrayfun(@(i) time_resolved_kfold_rand(data_svm{i}, labels, num_iterations, dec_args, svm_par), 1:length(data_svm), 'UniformOutput', false);
+rand_accuracy = cell2mat([accuracy]);
 
 end
 

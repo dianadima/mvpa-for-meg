@@ -89,6 +89,7 @@ if size(data,2)<lims(2)
     lims(2) = size(data,2);
 end;
 
+
 %here we create a cell array containing classification data for each time window
 data_svm = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,:), length(chan_idx)*dec_args.window_length, size(data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
 %and here we run the classifier

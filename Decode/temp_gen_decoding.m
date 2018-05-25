@@ -1,4 +1,4 @@
-function [ results ] = temp_gen_decoding( data, labels, varargin )
+function [ results, train_idx, test_idx ] = temp_gen_decoding( data, labels, varargin )
 % Performs temporal generalization SVM decoding of MEG data (train on each time point/window, test on all others). Uses hold-out validation (train on half, test on half).
 % Inputs: data, labels.
 % Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. You can also just provide numerical indices, in which case you don't need the structure. 
@@ -25,9 +25,11 @@ for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 addParameter(p, 'sensor_idx', []);
+addParameter(p, 'train_idx', []);
+addParameter(p, 'test_idx', []);
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx', 'pseudo', 'test_idx', 'train_idx'}); %converted struct will be fed into decoding function
 clear p;
 
 %get channel indices and time axis. Numerical channel indices take priority
@@ -86,19 +88,54 @@ if size(data,2)<lims(2)
     lims(2) = size(data,2);
 end;
 
-%here we create a cell array containing classification data for each time window
-%we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used
-classes = unique(labels); idx1 = find(labels==classes(1)); idx2 = find(labels==classes(2));
-train_idx = [idx1(randperm(floor(length(idx1)/2))); idx2(randperm(floor(length(idx2)/2)))];
-test_idx = [idx1; idx2]; test_idx(train_idx) = [];
+%we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used, and indices can be provided
+if isempty (dec_args.train_idx)
+    classes = unique(labels); idx1 = find(labels==classes(1)); idx2 = find(labels==classes(2));
+    train_idx = [idx1(randperm(floor(length(idx1)/2))); idx2(randperm(floor(length(idx2)/2)))];
+    test_idx = [idx1; idx2]; test_idx(train_idx) = [];
+else
+    train_idx = dec_args.train_idx;
+    test_idx = dec_args.test_idx;
+end;
 
-train_data = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,train_idx), length(chan_idx)*dec_args.window_length, length(train_idx))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
-test_data = arrayfun(@(i) reshape(data(chan_idx,i:i+dec_args.window_length-1,test_idx), length(chan_idx)*dec_args.window_length, length(test_idx))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
+if ~isempty(dec_args.pseudo)
+    
+    fprintf('\nCreating pseudotrials....\r');
+    [train_data, train_labels] = create_pseudotrials(data(chan_idx,:,train_idx), labels(train_idx), dec_args.pseudo(1), dec_args.pseudo(2));
+    if ndims(train_data)>3
+        train_data = reshape(train_data, size(train_data,1), size(train_data,2), size(train_data,3)*size(train_data,4));
+        train_labels = reshape(train_labels, size(train_labels,1)*size(train_labels,2),1);
+    end;
+    [test_data, test_labels] = create_pseudotrials(data(chan_idx,:,test_idx), labels(test_idx), dec_args.pseudo(1), dec_args.pseudo(2));
+    if ndims(test_data)>3
+        test_data = reshape(test_data, size(test_data,1), size(test_data,2), size(test_data,3)*size(test_data,4));
+        test_labels = reshape(test_labels, size(test_labels,1)*size(test_labels,2),1);
+    end;
+
+    clear data labels;
+    
+end;
+
+if dec_args.mnn
+    sigma_time = zeros(size(train_data,2), size(train_data,1), size(train_data,1));
+    for t = 1:size(train_data,2)
+        sigma_time(t,:,:) = cov1para(squeeze(train_data(:,t,:))');
+    end;
+    sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
+    for t = 1:size(train_data,2)
+        train_data(:,t,:) = (squeeze(train_data(:,t,:))'*sigma_inv)';
+        test_data(:,t,:) = (squeeze(test_data(:,t,:))'*sigma_inv)';
+        
+    end;
+end;
+
+train_data = arrayfun(@(i) reshape(train_data(:,i:i+dec_args.window_length-1,:), size(train_data,1)*dec_args.window_length, size(train_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
+test_data = arrayfun(@(i) reshape(test_data(:,i:i+dec_args.window_length-1,:), size(test_data,1)*dec_args.window_length, size(test_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
 
 results = zeros(length(train_data), length(train_data));
 
 %and here we run the classifier -first train on all time points and store the models
-svm_model = arrayfun(@(t) svm_train(train_data{t}, labels(train_idx), svm_par), 1:length(train_data), 'UniformOutput', false);
+svm_model = arrayfun(@(t) svm_train(train_data{t}, train_labels, svm_par), 1:length(train_data), 'UniformOutput', false);
 fprintf('\nFinished training all models...\r')  
 fprintf('\rNow testing...\r')
 
@@ -116,7 +153,7 @@ for t = 1:length(svm_model)
             test_data_i = (test_data{i} - repmat(min(train_data{t}, [], 1), size(test_data{i}, 1), 1)) ./ repmat(max(train_data{t}, [], 1) - min(train_data{t}, [], 1), size(test_data{i}, 1), 1);
         end;
         
-        [~, accuracy, ~] = predict(labels(test_idx), sparse(test_data_i), svm_model{t}, '-q 1');
+        [~, accuracy, ~] = predict(test_labels, sparse(test_data_i), svm_model{t}, '-q 1');
         results(t,i) = accuracy(1);
 
     end;

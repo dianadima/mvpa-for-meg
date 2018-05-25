@@ -47,9 +47,9 @@ results.Accuracy = accuracy(1);
 results.AccuracyMSError = accuracy(2);
 results.Confusion = zeros(2,2);
 results.Confusion = confusionmat(test_labels,scores);
-results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
-PP = results.Confusion(1,1)/(sum(results.Confusion(:,1))); %positive predictive value: class1
 if numel(results.Confusion)>1
+    results.Sensitivity = results.Confusion(1,1)/(sum(results.Confusion(1,:))); %TP/allP = TP/(TP+FN)
+    PP = results.Confusion(1,1)/(sum(results.Confusion(:,1))); %positive predictive value: class1
     results.Specificity = results.Confusion(2,2)/(sum(results.Confusion(2,:))); %TN/allN = TN/(FP+TN)
     NP = results.Confusion(2,2)/(sum(results.Confusion(:,2))); %negative predictive value: class2
     results.Fscore1 = (2*PP*results.Sensitivity)/(PP+results.Sensitivity);

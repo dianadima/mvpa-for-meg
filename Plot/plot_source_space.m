@@ -24,6 +24,7 @@ addParameter(p, 'visible', 'on');
 addParameter(p, 'inflated', true);
 addParameter(p, 'roi', []);
 addParameter(p, 'hemisphere', 'both');
+addParameter(p, 'view', [0 90]);
 parse(p, varargin{:});
 
 if size(accuracy,1)>1 && size(accuracy,2)>1
@@ -98,7 +99,7 @@ end;
 cfg.camlight = 'no';
 cfg.visible = p.Results.visible;
 
-ft_sourceplot(cfg,sourcemodel)
+ft_sourceplot(cfg,sourcemodel); view(p.Results.view)
 
 
 end

@@ -7,6 +7,7 @@ classdef decoding_args
         decoding_window = [];
         window_length = 1;
         time = [];
+        pseudo = [];
         
     end
     
@@ -19,6 +20,7 @@ classdef decoding_args
                 obj.decoding_window = varargin{2};
                 obj.window_length = varargin{3};
                 obj.time = varargin{4};
+                obj.pseudo = varargin{5};
             end;
         end
         

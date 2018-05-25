@@ -1,4 +1,4 @@
-function [ virtualdata ] = get_lcmv_data( dataset, mri_file, marker, varargin )
+function [ virtualdata1, virtualdata2 ] = get_lcmv_data_commfilt( dataset, mri_file, marker1, marker2, varargin )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -11,7 +11,13 @@ end;
 addParameter(p,'toilim', [0.5 0.7]); 
 addParameter(p,'trlidx', []);    
 parse(p, varargin{:});
-trialfun = p.Results.trialfun;
+
+%can read the datasets in using different trial functions (random but can be useful)
+if iscell(p.Results.trialfun)
+    trialfun1 = p.Results.trialfun{1}; trialfun2 = p.Results.trialfun{2};
+else
+    trialfun1 = p.Results.trialfun; trialfun2 = trialfun1;
+end;
 
 %% read in mri
 
@@ -39,8 +45,8 @@ cfg = [];
 cfg.dataset = dataset; 
 cfg.trialdef.prestim = p.Results.prestim;
 cfg.trialdef.poststim = p.Results.poststim;
-cfg.trialdef.eventtype = marker;
-cfg.trialfun = trialfun;
+cfg.trialdef.eventtype = marker1;
+cfg.trialfun = trialfun1;
 cfg.trlidx = p.Results.trlidx;
 cfg = ft_definetrial(cfg);
 
@@ -51,14 +57,37 @@ cfg.bpfreq = p.Results.bandpass;
 if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
     cfg.bpfiltord = 3;
 end;
-data = ft_preprocessing(cfg);
+data1 = ft_preprocessing(cfg);
+
+%COND 2
+cfg = [];
+cfg.dataset = dataset; 
+cfg.trialdef.prestim = p.Results.prestim;
+cfg.trialdef.poststim = p.Results.poststim;
+cfg.trialdef.eventtype = marker2;
+cfg.trialfun = trialfun2;
+cfg.trlidx = p.Results.trlidx;
+cfg = ft_definetrial(cfg);
+
+%preprocessing options
+cfg.channel = 'MEG'; 
+cfg.bpfilter = 'yes';
+cfg.bpfreq = p.Results.bandpass;
+if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
+    cfg.bpfiltord = 3;
+end;
+data2 = ft_preprocessing(cfg);
 
 if ~isempty(p.Results.resamplefs)
     cfg = [];
     cfg.resamplefs = p.Results.resamplefs;
     cfg.detrend = 'no';
-    data = ft_resampledata(cfg,data);
+    data1 = ft_resampledata(cfg,data1);
+    data2 = ft_resampledata(cfg,data2);
 end;
+
+%concatenate for common filter
+data = ft_appenddata([], data1, data2); 
 
 %timelock analysis
 cfg = [];
@@ -159,8 +188,8 @@ cfg = [];
 cfg.demean = 'yes'; 
 cfg.baselinewindow = p.Results.baseline; %baselining
 cfg.dataset = dataset;
-cfg.trialfun = trialfun; 
-cfg.trialdef.eventtype  = marker; 
+cfg.trialfun = trialfun1; 
+cfg.trialdef.eventtype  = marker1; 
 cfg.trialdef.prestim = p.Results.toilim(1);
 cfg.trialdef.poststim = p.Results.toilim(2);
 cfg.trlidx = p.Results.trlidx;
@@ -171,53 +200,101 @@ if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
     cfg.bpfiltord = 3;
 end;
 cfg = ft_definetrial(cfg);  
-data = ft_preprocessing(cfg);
+data1 = ft_preprocessing(cfg);
+
+
+cfg = []; 
+cfg.demean = 'yes'; 
+cfg.baselinewindow = p.Results.baseline; %baselining
+cfg.dataset = dataset;
+cfg.trialfun = trialfun2; 
+cfg.trialdef.eventtype  = marker2; 
+cfg.trialdef.prestim = p.Results.toilim(1);
+cfg.trialdef.poststim = p.Results.toilim(2);
+cfg.trlidx = p.Results.trlidx;
+cfg.channel = 'MEG';
+cfg.bpfilter = 'yes';
+cfg.bpfreq = p.Results.bandpass;
+if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
+    cfg.bpfiltord = 3;
+end;
+cfg = ft_definetrial(cfg);  
+data2 = ft_preprocessing(cfg);
+
 
 if ~isempty(p.Results.resamplefs)
     cfg = [];
     cfg.resamplefs = p.Results.resamplefs;
     cfg.detrend = 'no';
-    data = ft_resampledata(cfg,data);
+    data1 = ft_resampledata(cfg,data1);
+    data2 = ft_resampledata(cfg,data2);
 end;
 
 %for MNN, calculate error covariance based on data from both conditions
 if p.Results.mnn
-    data_ = cat(3, data.trial{:});
+    data = ft_appenddata([], data1, data2); 
+    data = cat(3, data.trial{:});
     fprintf('\rWhitening data...\r');
-    sigma_time = zeros(size(data_,2), size(data_,1), size(data_,1));
-    for t = 1:size(data_,2)
-        sigma_time(t,:,:) = cov1para(squeeze(data_(:,t,:))');
+    sigma_time = zeros(size(data,2), size(data,1), size(data,1));
+    for t = 1:size(data,2)
+        sigma_time(t,:,:) = cov1para(squeeze(data(:,t,:))');
     end;
     sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
-    clear data_;
+    clear data;
 end;
 
-virtualdata = data;
+virtualdata1 = data1;
 %Create the virtual data
-for j = 1 : length(data.trial)
+for j = 1 : length(data1.trial)
     if p.Results.fixedori
         if p.Results.mnn
-            virtualdata.trial{j} = (filters*sigma_inv) * data.trial{j};
+            virtualdata1.trial{j} = (filters*sigma_inv) * data1.trial{j};
         else
-            virtualdata.trial{j} = filters * data.trial{j};
+            virtualdata1.trial{j} = filters * data1.trial{j};
         end;
     else
-        virtualdata.trial{j} = zeros(size(filters,1),size(data.trial{j},2),size(filters,3));
+        virtualdata1.trial{j} = zeros(size(filters,1),size(data1.trial{j},2),size(filters,3));
         for ori = 1:3
             if p.Results.mnn
-                virtualdata.trial{j}(:,:,ori) = (filters(:,:,ori)*sigma_inv) * data.trial{j};
+                virtualdata1.trial{j}(:,:,ori) = (filters(:,:,ori)*sigma_inv) * data1.trial{j};
             else
-                virtualdata.trial{j}(:,:,ori) = filters(:,:,ori) * data.trial{j};
+                virtualdata1.trial{j}(:,:,ori) = filters(:,:,ori) * data1.trial{j};
             end;
         end
     end;
 end;
 
-for j = 1 : size(virtualdata.trial{1},1)    %to keep FT happy
-       virtualdata.label{j,1} = num2str(j);
+for j = 1 : size(virtualdata1.trial{1},1)    %to keep FT happy
+       virtualdata1.label{j,1} = num2str(j);
 end
 
-virtualdata = rmfield(virtualdata, 'cfg');
+virtualdata2 = data2;
+%Create the virtual data
+for j = 1 : length(data2.trial)
+    if p.Results.fixedori
+        if p.Results.mnn
+            virtualdata2.trial{j} = (filters*sigma_inv) * data2.trial{j};
+        else
+            virtualdata2.trial{j} = filters * data2.trial{j};
+        end;
+    else
+        virtualdata2.trial{j} = zeros(size(filters,1),size(data2.trial{j},2),size(filters,3));
+        for ori = 1:3
+            if p.Results.mnn
+                virtualdata2.trial{j}(:,:,ori) = (filters(:,:,ori)*sigma_inv) * data2.trial{j};
+            else
+                virtualdata2.trial{j}(:,:,ori) = filters(:,:,ori) * data2.trial{j};
+            end;
+        end
+    end;
+end;
 
+for j = 1 : size(virtualdata2.trial{1},1)    %to keep FT happy
+       virtualdata2.label{j,1} = num2str(j);
+end
+
+virtualdata1 = rmfield(virtualdata1, 'cfg');
+virtualdata2 = rmfield(virtualdata2, 'cfg');
 
 end
+

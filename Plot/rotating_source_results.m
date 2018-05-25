@@ -1,4 +1,4 @@
-function [] = movie_source_results( accuracy, output_file, source_idx, varargin )
+function [] = rotating_source_results( accuracy, output_file, source_idx, varargin )
 % Plot sensor-space searchlight decoding results as a movie.
 % Inputs: results: matrix of accuracy/decoding performance. Must be channels x time, or subjects x channels x time.
 %         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).
@@ -19,18 +19,12 @@ addParameter(p, 'visible', 'on');
 addParameter(p, 'inflated', true);
 addParameter(p, 'hemisphere', 'both');
 addParameter(p, 'roi', []);
-addParameter(p, 'view', [0 90]); %view - default = from above
 addParameter(p, 'result_type', 'Accuracy (%)');
-addParameter(p, 'framerate', 2);
+addParameter(p, 'framerate', 10);
 parse(p, varargin{:});
 
-if ismatrix(accuracy)
-    acc = accuracy;
-elseif ndims(accuracy)==3
-    acc = squeeze(mean(accuracy,1));
-    fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
-else
-    error('Results should be a 2d or 3d matrix containing subjects x channels x time');
+if size(accuracy,1)>1 && size(accuracy,2)>1
+    error('The parameter you wish to plot must be a vector')
 end;
     
 %load sourcemodel
@@ -51,32 +45,27 @@ sourcemodel = ft_convert_units(sourcemodel, 'mm');
 sourcemodel.coordsys = 'mni';
 if isempty(source_idx)
     
-    if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= size(acc,1)
+    if size(sourcemodel.pos(sourcemodel.inside,:,:),1) ~= size(accuracy,1)
         error('Please provide source indices or ensure accuracy dimension 1 fits number of inside sources in FT sourcemodel.')
     end;
     
-    pow = NaN(size(sourcemodel.pos,1),size(acc,2));
-    pow(sourcemodel.inside,:) = acc;
+    sourcemodel.pow = NaN(1,size(sourcemodel.pos,1));
+    sourcemodel.pow(sourcemodel.inside) = accuracy;
     
 else
     
     idx = unique(cell2mat(source_idx));
     inside = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
-    all_acc = repmat(inside,size(acc,2),1)';
     outside_idx = inside; outside_idx(idx) = [];
     
-    for t = 1:size(acc,2)
-        for i = 1:length(source_idx)
-            inside(ismember(inside,source_idx{i})) = acc(i,t);
-        end;
-        all_acc(:,t) = inside';
-        inside = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
+    for i = 1:length(source_idx)
+        inside(ismember(inside,source_idx{i})) = accuracy(i);
     end;
     
-    all_acc(outside_idx,:) = NaN;
+    inside(outside_idx) = NaN;
     
-    pow = NaN(size(sourcemodel.pos,1),size(acc,2));
-    pow(sourcemodel.inside,:) = all_acc;
+    sourcemodel.pow = NaN(1,size(sourcemodel.pos,1))';
+    sourcemodel.pow(sourcemodel.inside) = inside;
     
 end;
 
@@ -101,17 +90,18 @@ if p.Results.inflated
 end;
 cfg.camlight = 'no';
 cfg.visible = 'on';
+if ~isempty(p.Results.roi)
+    cfg.roi = p.Results.roi;
+end;
 
-
-F(size(acc,2)) = struct('cdata',[],'colormap',[]);
-for i = 1:size(accuracy,2)
-    sourcemodel.pow = pow(:,i);
-    if ~isempty(p.Results.roi), cfg.roi = p.Results.roi{i}; end;
-    ft_sourceplot(cfg,sourcemodel); view(p.Results.view);
-    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
-    c = colorbar; c.Label.String = p.Results.result_type;
+views = repmat(0:5:360,1,3);
+F(length(views)) = struct('cdata',[],'colormap',[]);
+ft_sourceplot(cfg,sourcemodel); 
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
+c = colorbar; c.Label.String = p.Results.result_type; 
+for i = 1:length(views)
+    view([views(i) 0]);
     F(i) = getframe(gcf);
-    close;    
 end;
 
 vid_obj = VideoWriter(output_file);

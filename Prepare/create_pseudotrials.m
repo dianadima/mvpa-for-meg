@@ -84,7 +84,7 @@ end;
 %reshape into data*pseudotrials (over permutations)
 newsz = 1:length(newsz); newsz(length(newsz)+1) = 2; newsz(length(newsz)+1) = 1; newsz(1:2)=[]; 
 newdata = permute(newdata, newsz); %trials are last dim
-newdata = squeeze(newdata); %one permutation case
+%newdata = squeeze(newdata); %one permutation case
 newlabels = cat(2,newlabels{:});
 
 

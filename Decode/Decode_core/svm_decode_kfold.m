@@ -39,7 +39,7 @@ results = struct;
 for icv = 1: svm_par.iterate_cv
 
     cv = cvpartition(labels, 'kfold', svm_par.kfold);
-    allscore = zeros(length(labels),1); accuracy = zeros(3,5);
+    allscore = zeros(length(labels),1); accuracy = zeros(3,svm_par.kfold);
     
     for ii = 1:svm_par.kfold
         

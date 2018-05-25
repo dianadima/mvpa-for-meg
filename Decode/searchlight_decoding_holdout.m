@@ -30,7 +30,7 @@ end;
 
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'pseudo'}); %converted struct will be fed into decoding function
 clear p;
 
 %channel indices for each searchlight iteration
