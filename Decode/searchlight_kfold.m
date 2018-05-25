@@ -1,14 +1,16 @@
-function [ results ] = searchlight_kfold( data, labels, cluster_idx, varargin )
-% Inputs: data, labels, cluster_idx (neighbourhood structure or source indices obtained using get_sensor_info or get_source_info).
-% Optional: 
-%          'channels', channel set set (string or cell array of strings; default: 'MEG'). 
+function [ results ] = searchlight_kfold_new( data, labels, cluster_idx, varargin )
+% Performs time-resolved SVM decoding of MEG data, using stratified k-fold cross-validation on each time window, and LibLinear SVM implementation.
+% Inputs: data, labels.
+% Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. You can also just provide numerical indices, in which case you don't need the structure.
+%                        If you want to subselect features on source space data, you need to manually provide numerical indice (i.e. 'channels', [1:1000]).
+%          'channels', channel set set (string or cell array of strings; default: 'MEG').
 %          'decoding_window' (limits; default: [] - all timepoints). In  sampled time points (OR in seconds - only if you also provide time axis).
 %          'window_length' (in sampled time points; default: 1).
 %          'time', time axis, if you want to give the decoding window in seconds, you also need to provide a time axis, matching the second dimension of the data).
-%           other possible name-value pairs: SVM settings, svm evaluation metrics (see Documentation).
-% Output: time and space-resolved accuracy and F1-score (channels x time).
-% Performs time and space-resolved SVM decoding of MEG data, using stratified k-fold cross-validation and LibLinear for each time window and sensor cluster.
-% Uses sensor neighbours defined using FT template configuration (or custom structure containing source indices).
+%
+%           * other possible name-value pairs: SVM settings, svm evaluation metrics (see Documentation).
+% Outputs: structure containing classification performance metrics (for each timepoint).
+
 
 %parse inputs
 dec_args = decoding_args;
@@ -22,10 +24,12 @@ end;
 for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
+addParameter(p, 'sensor_idx', []);
+
 
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx'}); %converted struct will be fed into decoding function
 clear p;
 
 %channel indices for each searchlight iteration
@@ -35,33 +39,169 @@ else
     chan_idx = cluster_idx; %the source-space case
 end;
 
+%create time axis
+if ~isempty(dec_args.time)
+    time = dec_args.time;
+elseif ~isempty(dec_args.sensor_idx) && isfield(sensor_idx, 'time')
+    time = sensor_idx.time;
+else
+    time = 1:size(data,2);
+end;
+
+if length(time)~=size(data,2)
+    time = 1:size(data,2);
+    fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
+end;
+
+%subselect data corresponding to decoding window requested
+if ~isempty(dec_args.decoding_window)
+    if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
+        lims(1) = find(round(time,3)==dec_args.decoding_window(1));
+    else
+        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
+        lims(1) = 1;
+    end;
+    if ~isempty(find(round(time,3)==dec_args.decoding_window(end),1))
+        lims(2) = find(round(time,3)==dec_args.decoding_window(end));
+    else
+        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
+        lims(2) = size(data,2);
+    end;
+    
+else
+    lims = [1 size(data,2)];
+end;
+
+if size(data,2)<lims(2)
+    lims(2) = size(data,2);
+end;
+
+data = data(:, lims(1):lims(2), :);
+
+if ~isa(data, 'double')
+    data = double(data);
+end;
+
+results = struct;
+
+%cross-validation indices - convoluted but can be kept constant if need be
 if isempty(dec_args.cv_indices)
-    cv = cvpartition(labels, 'kfold', 5);
-    dec_args.cv_indices = cv;
+    cv = cvpartition(labels, 'kfold', svm_par.kfold);
+else
+    cv = dec_args.cv_indices;
 end;
 
-fprintf('\nRunning %d searchlights...\n', length(chan_idx)); 
-
-data_svm = arrayfun(@(i) data(chan_idx{i}, :,:), 1:length(chan_idx), 'UniformOutput', false); %channel and time selection
-res = arrayfun(@(i) time_resolved_kfold(data_svm{i}, labels, dec_args, svm_par), 1:length(data_svm));
-
-%put results in a human-friendly format
-results.Accuracy = cell2mat({res.Accuracy}');
-results.AccuracyMSError = cell2mat({res.AccuracyMSError}');
-results.AccuracyFold = cell2mat({res.AccuracyFold}');
-results.Confusion = {res.Confusion}';
-results.Sensitivity = cell2mat({res.Sensitivity}');
-results.Specificity = cell2mat({res.Specificity}');
-results.Fscore1 = cell2mat({res.Fscore1}');
-results.Fscore2 = cell2mat({res.Fscore2}');
-results.WeightedFscore = cell2mat({res.WeightedFscore}');
-results.cv_indices = cell2mat({res.cv_indices}');
-if isfield(res, 'Weights')
-    results.Weights = cell2mat({res.Weights}'); %this puts together weights from all searchlights for each timepoit
-    results.WeightPatterns = cell2mat({res.WeightPatterns}');
-    results.WeightPatternsNorm = cell2mat({res.WeightPatternsNorm}');
+if isa(cv,'cvpartition')
+    cv_train = zeros(length(labels),1); cv_test = cv_train;
+    for ii = 1:dec_args.kfold
+        cv_train(:,ii) = cv.training(ii);
+        cv_test(:,ii) = cv.test(ii);
+    end;
+else
+    if size(cv,2)~=dec_args.kfold
+        error('Crossval indices must be supplied in indices x folds matrix or logical array.');
+    end;
+    cv_train = cv;
+    cv_test = abs(cv_train-1);
 end;
 
+cv_train = logical(cv_train); cv_test = logical(cv_test);
+cv_idx = cv_train; %this will be saved for later - prior to trial averaging
+
+%create pseudo-trials if requested; this is done separately for every test set, ensuring independence
+if ~isempty(dec_args.pseudo)
+    
+    fprintf('\nCreating pseudotrials....\r');
+    all_data = cell(1,svm_par.kfold); all_labels = cell(1,svm_par.kfold);
+    cv_test_tmp = zeros(1,svm_par.kfold); %we have to redo the crossval indices
+    
+    for ii = 1:5
+        [ps_data, ps_labels] = create_pseudotrials(data(:,:,cv_test(:,ii)), labels(cv_test(:,ii)), dec_args.pseudo(1), dec_args.pseudo(2));
+        if ndims(ps_data)>3
+            ps_data = reshape(ps_data, size(ps_data,1), size(ps_data,2), size(ps_data,3)*size(ps_data,4));
+            ps_labels = reshape(ps_labels, size(ps_labels,1)*size(ps_labels,2),1);
+        end;
+        all_data{ii} = ps_data; all_labels{ii} = ps_labels;
+        if ii==1
+            cv_test_tmp(1:length(ps_labels) ,ii) = 1;
+            idx = 0;
+        else
+            idx = idx + length(all_labels{ii-1});
+            cv_test_tmp(idx+1:idx+length(ps_labels),ii) = 1;
+        end;
+    end;
+    
+    data = cat(3,all_data{:}); labels = cat(1,all_labels{:});
+    cv_train = abs(cv_test_tmp-1);
+    cv_test = cv_test_tmp;
+    cv_train = logical(cv_train); cv_test = logical(cv_test);
+    clear all_data all_labels cv_test_tmp;
+    
+end;
+
+allscore = zeros(length(labels), length(chan_idx), floor(size(data,2)/dec_args.window_length)); accuracy = zeros(3,5, length(chan_idx), floor(size(data,2)/dec_args.window_length));
+
+for ii = 1:svm_par.kfold
+    
+    fprintf('\rDecoding fold %d out of %d', ii, svm_par.kfold);
+    
+    if dec_args.mnn
+        sigma_time = zeros(size(data,2), size(data,1), size(data,1));
+        for t = 1:size(data,2)
+            sigma_time(t,:,:) = cov1para(squeeze(data(:,t,cv_train(:,ii)))');
+        end;
+        sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
+        for t = 1:size(data,2)
+            data(:,t,cv_train(:,ii)) = (squeeze(data(:,t,cv_train(:,ii)))'*sigma_inv)';
+            data(:,t,cv_test(:,ii)) = (squeeze(data(:,t,cv_test(:,ii)))'*sigma_inv)';
+            
+        end;
+    end;
+    
+    tp = 1:dec_args.window_length:size(data,2)-dec_args.window_length+1;
+    fprintf('\nRunning searchlight ');
+    
+    for c = 1:length(chan_idx)
+        
+        fprintf('%d out of %d', c, length(chan_idx));
+        
+        for t = 1:length(tp)
+            
+            kdata = reshape(data(chan_idx{c},tp(t):tp(t)+dec_args.window_length-1,:), length(chan_idx{c})*dec_args.window_length, size(data,3))'; %select time point or time window
+            if svm_par.standardize
+                kdata = (kdata - repmat(min(kdata(cv_train(:,ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata(cv_train(:,ii),:), [], 1) - min(kdata(cv_train(:,ii),:), [], 1), size(kdata, 1), 1);
+            end;
+            svm_model = train(labels(cv_train(:,ii)), sparse(kdata(cv_train(:,ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
+            [allscore(cv_test(:,ii),c,t), accuracy(:,ii,c,t), ~] = predict(labels(cv_test(:,ii)), sparse(kdata(cv_test(:,ii),:)), svm_model, '-q 1');
+            
+        end;
+        
+        fprintf((repmat('\b',1,numel([num2str(c) num2str(length(chan_idx))])+8)));
+        
+    end;
+    
+    fprintf([repmat('\b',1,20) 'Done']);
+    
+end;
+
+%store a bunch of stuff
+results.Accuracy = squeeze(mean(accuracy(1,:,:,:),2));
+results.AccuracyMSError = squeeze(mean(accuracy(2,:,:,:),2));
+results.AccuracyFold = squeeze(accuracy(1,:,:,:));
+for c = 1:length(chan_idx)
+    for t = 1:length(tp)
+        results.Confusion{c,t} = confusionmat(labels,squeeze(allscore(:,c,t)));
+        if numel(results.Confusion)>1
+            results.Sensitivity(c,t) = results.Confusion{c,t}(1,1)/(sum(results.Confusion{c,t}(1,:))); %TP/allP = TP/(TP+FN)
+            results.Specificity(c,t) = results.Confusion{c,t}(2,2)/(sum(results.Confusion{c,t}(2,:))); %TN/allN = TN/(FP+TN)
+            PP = results.Confusion{c,t}(1,1)/(sum(results.Confusion{c,t}(:,1))); %positive predictive value: class1
+            NP = results.Confusion{c,t}(2,2)/(sum(results.Confusion{c,t}(:,2))); %negative predictive value: class2
+            results.Fscore1(c,t) = (2*PP*results.Sensitivity(c,t))/(PP+results.Sensitivity(c,t));
+            results.Fscore2(c,t) = (2*NP*results.Specificity(c,t))/(NP+results.Specificity(c,t));
+            results.WeightedFscore(c,t) = ((sum(results.Confusion{c,t}(:,1))/sum(results.Confusion{c,t}(:)))*results.Fscore1(c,t)) + ((sum(results.Confusion{c,t}(:,2))/sum(results.Confusion{c,t}(:)))*results.Fscore2(c,t));
+        end;
+    end;
+end;
+results.cv_indices = cv_idx; %this can be reused
 
 end
-
