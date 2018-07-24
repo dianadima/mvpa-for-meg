@@ -42,8 +42,8 @@ if length(time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
 end;
 
 if size(errorbar,1)==1
-    upper = accuracy + errorbar;
-    lower = accuracy - errorbar;
+        upper = accuracy + errorbar;
+        lower = accuracy - errorbar;
 elseif size(errorbar,1)==2
     if errorbar(1,1)>errorbar(2,1)
          errorbar = flipud(errorbar);
@@ -68,7 +68,9 @@ end;
 
 if ~isempty(p.Results.signif)
     for j = 1:length(p.Results.signif)
-        l3 = line([p.Results.signif(j) p.Results.signif(j)+0.0001], [p.Results.signif_ylocation p.Results.signif_ylocation], 'color', p.Results.color, 'LineWidth', 2); hasbehavior(l3, 'legend', false); hold on; 
+        tmp = find(time==p.Results.signif(j));  
+        if time(end)>p.Results.signif(j), tmp = time(tmp+1); end; 
+        l3 = line([p.Results.signif(j) tmp], [p.Results.signif_ylocation p.Results.signif_ylocation], 'color', p.Results.color, 'LineWidth', 2); hasbehavior(l3, 'legend', false); hold on; 
     end;
     l4 = line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color); hold on; hasbehavior(l4, 'legend', false); hold on; 
 end;

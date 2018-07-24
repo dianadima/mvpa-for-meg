@@ -59,21 +59,18 @@ if isempty(source_idx)
     pow(sourcemodel.inside,:) = acc;
     
 else
-    
-    idx = unique(cell2mat(source_idx));
-    inside = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
-    all_acc = repmat(inside,size(acc,2),1)';
-    outside_idx = inside; outside_idx(idx) = [];
+   
+    all_acc = nan(length(find(sourcemodel.inside==1)),size(acc,2));
     
     for t = 1:size(acc,2)
         for i = 1:length(source_idx)
-            inside(ismember(inside,source_idx{i})) = acc(i,t);
-        end;
-        all_acc(:,t) = inside';
-        inside = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
-    end;
-    
-    all_acc(outside_idx,:) = NaN;
+            if length(source_idx)==size(all_acc,1)
+                all_acc(i,t) = acc(i,t);
+            else
+                all_acc(source_idx{i},t) = acc(i,t);
+            end
+        end
+    end
     
     pow = NaN(size(sourcemodel.pos,1),size(acc,2));
     pow(sourcemodel.inside,:) = all_acc;

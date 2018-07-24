@@ -54,18 +54,17 @@ if isempty(source_idx)
     
 else
     
-    idx = unique(cell2mat(source_idx));
-    inside = 1:size(sourcemodel.pos(sourcemodel.inside,:,:),1);
-    outside_idx = inside; outside_idx(idx) = [];
-    
+    pow = nan(1,length(find(sourcemodel.inside==1)));
     for i = 1:length(source_idx)
-        inside(ismember(inside,source_idx{i})) = accuracy(i);
-    end;
-    
-    inside(outside_idx) = NaN;
-    
-    sourcemodel.pow = NaN(1,size(sourcemodel.pos,1))';
-    sourcemodel.pow(sourcemodel.inside) = inside;
+        if length(source_idx)==length(pow)
+            pow(i) = accuracy(i); %assign to centroids
+        else
+            pow(source_idx{i}) = accuracy(i);
+        end
+    end
+   
+    sourcemodel.pow = nan(length(sourcemodel.inside),1);
+    sourcemodel.pow(sourcemodel.inside) = pow;
     
 end;
 
