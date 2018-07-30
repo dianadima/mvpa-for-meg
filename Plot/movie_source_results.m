@@ -8,6 +8,7 @@ function [] = movie_source_results( accuracy, output_file, source_idx, varargin 
 %   'clim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
 %   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
+%   'style', default 'searchlight' (can be 'searchlight' or 'centroid')
 % Need to add capability for ROI and searchlight plotting
 [~, ftdir] = ft_version; %get FT directory
 
@@ -22,6 +23,7 @@ addParameter(p, 'roi', []);
 addParameter(p, 'view', [0 90]); %view - default = from above
 addParameter(p, 'result_type', 'Accuracy (%)');
 addParameter(p, 'framerate', 2);
+addParameter(p, 'style', 'searchlight');
 parse(p, varargin{:});
 
 if ismatrix(accuracy)
@@ -64,10 +66,12 @@ else
     
     for t = 1:size(acc,2)
         for i = 1:length(source_idx)
-            if length(source_idx)==size(all_acc,1)
-                all_acc(i,t) = acc(i,t);
-            else
-                all_acc(source_idx{i},t) = acc(i,t);
+            if ~isnan(accuracy(i,t)) && accuracy(i,t)~=0
+                if length(source_idx)==size(all_acc,1) && strcmp(p.Results.style, 'centroid')
+                    all_acc(i,t) = acc(i,t);
+                else
+                    all_acc(source_idx{i},t) = acc(i,t);
+                end
             end
         end
     end
@@ -105,7 +109,7 @@ for i = 1:size(accuracy,2)
     sourcemodel.pow = pow(:,i);
     if ~isempty(p.Results.roi), cfg.roi = p.Results.roi{i}; end;
     ft_sourceplot(cfg,sourcemodel); view(p.Results.view);
-    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.4 0.6]);
     c = colorbar; c.Label.String = p.Results.result_type;
     F(i) = getframe(gcf);
     close;    

@@ -8,6 +8,7 @@ function [] = rotating_source_results( accuracy, output_file, source_idx, vararg
 %   'clim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
 %   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
+%   'style', default 'searchlight' (can be 'searchlight' or 'centroid')
 % Need to add capability for ROI and searchlight plotting
 [~, ftdir] = ft_version; %get FT directory
 
@@ -21,6 +22,7 @@ addParameter(p, 'hemisphere', 'both');
 addParameter(p, 'roi', []);
 addParameter(p, 'result_type', 'Accuracy (%)');
 addParameter(p, 'framerate', 10);
+addParameter(p, 'style', 'searchlight');
 parse(p, varargin{:});
 
 if size(accuracy,1)>1 && size(accuracy,2)>1
@@ -56,10 +58,12 @@ else
     
     pow = nan(1,length(find(sourcemodel.inside==1)));
     for i = 1:length(source_idx)
-        if length(source_idx)==length(pow)
-            pow(i) = accuracy(i); %assign to centroids
-        else
-            pow(source_idx{i}) = accuracy(i);
+        if ~isnan(accuracy(i)) && accuracy(i)~=0
+            if length(source_idx)==length(pow) && strcmp(p.Results.style, 'centroid')
+                pow(i) = accuracy(i); %assign to centroids
+            else
+                pow(source_idx{i}) = accuracy(i);
+            end
         end
     end
    
@@ -96,7 +100,7 @@ end;
 views = repmat(0:5:360,1,3);
 F(length(views)) = struct('cdata',[],'colormap',[]);
 ft_sourceplot(cfg,sourcemodel); 
-set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.3 0.5]);
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0 0.4 0.4 0.6]);
 c = colorbar; c.Label.String = p.Results.result_type; 
 for i = 1:length(views)
     view([views(i) 0]);
