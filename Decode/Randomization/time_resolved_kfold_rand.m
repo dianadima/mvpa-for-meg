@@ -37,6 +37,7 @@ if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
 end;
 if ~isempty(dec_args.sensor_idx) %a structure was given
+    sensor_idx = dec_args.sensor_idx;
     if ~exist('chan_idx', 'var') %there are no numerical indices
         chan_idx = 1:size(data,1); %initialize with entire array
         if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
