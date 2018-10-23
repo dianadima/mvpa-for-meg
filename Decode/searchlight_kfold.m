@@ -1,4 +1,4 @@
-function [ results ] = searchlight_kfold_new( data, labels, cluster_idx, varargin )
+function [ results ] = searchlight_kfold( data, labels, cluster_idx, varargin )
 % Performs time-resolved SVM decoding of MEG data, using stratified k-fold cross-validation on each time window, and LibLinear SVM implementation.
 % Inputs: data, labels.
 % Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. You can also just provide numerical indices, in which case you don't need the structure.
@@ -146,10 +146,14 @@ for ii = 1:svm_par.kfold
     fprintf('\rDecoding fold %d out of %d', ii, svm_par.kfold);
     
     if dec_args.mnn
-        sigma_time = zeros(size(data,2), size(data,1), size(data,1));
+        class_id = unique(labels); class1 = find(labels==class_id(1)); class2 = find(labels==class_id(2)); %this needs to be done separately for each condition
+        cv_tmp = find(cv_train(:,ii)==1); class1 = cv_tmp(ismember(cv_tmp,class1)); class2 = cv_tmp(ismember(cv_tmp,class2));
+        sigma_time = zeros(2,size(data,2), size(data,1), size(data,1));
         for t = 1:size(data,2)
-            sigma_time(t,:,:) = cov1para(squeeze(data(:,t,cv_train(:,ii)))');
+            sigma_time(1,t,:,:) = cov1para(squeeze(data(:,t,class1))');
+            sigma_time(2,t,:,:) = cov1para(squeeze(data(:,t,class2))');
         end;
+        sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
         sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
         for t = 1:size(data,2)
             data(:,t,cv_train(:,ii)) = (squeeze(data(:,t,cv_train(:,ii)))'*sigma_inv)';

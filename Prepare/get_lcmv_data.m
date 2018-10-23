@@ -1,7 +1,7 @@
 function [ virtualdata ] = get_lcmv_data( dataset, mri_file, marker, varargin )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
-
+addpath(strrep(mfilename('fullpath'),'get_lcmv_data','subfunctions'));
 opt = lcmv_args;
 list = fieldnames(opt);
 p = inputParser;

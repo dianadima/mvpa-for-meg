@@ -117,10 +117,13 @@ if ~isempty(dec_args.pseudo)
 end;
 
 if dec_args.mnn
-    sigma_time = zeros(size(train_data,2), size(train_data,1), size(train_data,1));
+    class_id = unique(train_labels); class1 = train_labels==class_id(1); class2 = train_labels==class_id(2); %this needs to be done separately for each condition
+    sigma_time = zeros(2,size(train_data,2), size(train_data,1), size(train_data,1));
     for t = 1:size(train_data,2)
-        sigma_time(t,:,:) = cov1para(squeeze(train_data(:,t,:))');
+        sigma_time(1,t,:,:) = cov1para(squeeze(train_data(:,t,class1))');
+        sigma_time(2,t,:,:) = cov1para(squeeze(train_data(:,t,class2))');
     end;
+    sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
     sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
     for t = 1:size(train_data,2)
         train_data(:,t,:) = (squeeze(train_data(:,t,:))'*sigma_inv)';

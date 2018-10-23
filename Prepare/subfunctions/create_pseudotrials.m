@@ -18,8 +18,8 @@ sz = size(data); %store new size
 if isempty(labels)
     n_cond = 1;
     idx = repmat({':'}, 1, ndims(data));
-    idx{1} = 1:size(data, trldim);
-    trlsize = floor((size(data,1)-1)/n_trials);
+    idx{1,1} = 1:size(data, 1);
+    trlsize = floor(size(data,1)/n_trials);
 else
     n_cond = length(unique(labels));
     classes = unique(labels);
