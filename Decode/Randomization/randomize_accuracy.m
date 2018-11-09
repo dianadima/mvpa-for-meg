@@ -1,12 +1,13 @@
-function [ rand_stat, pvalue, maxvalue ] = randomize_accuracy(accuracy, num_iterations, varargin)
+function [ rand_stat, obs_stat, pvalue ] = randomize_accuracy(accuracy, varargin)
 % Sign test on accuracies. 
-% Inputs: accuracy (length is number of observations/subjects), num_iterations (number of randomizations).
-% Name-value optional inputs: 'chance_level' (default 50) - will be subtracted before sign flipping;
+% Inputs: accuracy (length is number of observations/subjects).
+% Name-value optional inputs: 'num_iterations' (default 5000) - number of randomizations;
+%                             'chance_level' (default 50) - will be subtracted before sign flipping;
 %                             'statistic' (default 'mean') - which statistic to randomize, 'mean' or 'tstat'
 % Outputs: rand_stat contains randomized statistic (length is num_iterations);
-%          p-value (one-tailed: number of randomizations exceeding observed statistic);
-%          maxvalue (maximal statistic in the null distribution, useful for thresholding).
+%          p-value (one-tailed: number of randomizations exceeding observed statistic).
 
+addParameter(p, 'num_iterations',5000);
 addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
 parse(p, varargin{:});
@@ -27,15 +28,12 @@ switch p.Results.statistic
         
         rand_stat = mean(rand_accuracy,2);
         pvalue = (length(find(rand_stat>=mean(acc_dm)))+1)/(num_iterations+1);
-        maxvalue = max(rand_stat);
         
     case 'tstat'
         
         rand_stat = mean(rand_accuracy,2)/(std(rand_accuracy,[],2)/sqrt(size(accuracy,2)));
         obs_stat = mean(acc_dm)/(std(acc_dm)/sqrt(length(acc_dm)));
-        pvalue = (length(find(rand_stat>=obs_stat))+1)/(num_iterations+1);
-        maxvalue = max(rand_stat);
-        
+        pvalue = (length(find(rand_stat>=obs_stat))+1)/(num_iterations+1);       
         
 end
      
