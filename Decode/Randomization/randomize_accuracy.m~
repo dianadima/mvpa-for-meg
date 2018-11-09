@@ -1,11 +1,8 @@
 function [ rand_stat, pvalue, maxvalue ] = randomize_accuracy(accuracy, num_iterations, varargin)
 % Sign test on accuracies. 
 % Inputs: accuracy (length is number of observations/subjects), num_iterations (number of randomizations).
-% Name-value optional inputs: 'chance_level' (default 50) - will be subtracted before sign flipping;
-%                             'statistic' (default 'mean') - which statistic to randomize, 'mean' or 'tstat'
-% Outputs: rand_stat contains randomized statistic (length is num_iterations);
-%          p-value (one-tailed: number of randomizations exceeding observed statistic);
-%          maxvalue (maximal statistic in the null distribution, useful for thresholding).
+% Output
+
 
 addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
