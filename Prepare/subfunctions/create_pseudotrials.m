@@ -1,6 +1,6 @@
 function [ newdata, newlabels ] = create_pseudotrials( data, labels, n_trials, n_perm)
 % Creates averages of trials to increase SNR for multivariate analysis.
-% (!) Make sure that last dimension of data is trial dimension.
+% (!) Make sure that last dimension of data is trial dimension. No singleton dimensions.
 % Inputs:
 %       data = n-dimensional matrix with trials as last dimension.
 %       labels = class labels, of same length as last dimension of data. Any number of classes is supported.
