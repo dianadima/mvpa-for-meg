@@ -91,14 +91,14 @@ switch(opt.method)
         end
         
         max_r_cls = zeros(1,opt.num_iterations); %maximal cluster distribution, only maxsize for now
-
+        
         %include channel, source (grid) data, and time by time cases
         if ~isempty(opt.spatial_def)
             
             %here we will use some Fieldtrip functions to not reinvent the wheel
             %first add the private FT functions to path
             [~,ftpath] = ft_version; addpath(fullfile(ftpath, private));
-                        
+            
             if isfield (opt.spatial_def, 'neighblabel') % channel case
                 
                 cfg = [];
