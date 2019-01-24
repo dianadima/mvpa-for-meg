@@ -1,13 +1,13 @@
 function [stats] = run_stats(accuracy, varargin)
-% TO DO: ADD CLUSTER CORRECTION & ADD ONSET BOOTSTRAPPING
 % Inputs: accuracy can be: subjects x time, subjects x space x time, subjects x time x time
+% NOTE: If data is space by time, make sure time is last dimension! 
 % This is strictly fixed effects - add a possibility to loop through subjects...
 
+p = inputParser;
 addParameter(p, 'method','omnibus'); %cluster, omnibus, fdr, mixed_of, mixed_fo (specify for each dimension)
 addParameter(p, 'alpha', 0.05);
 addParameter(p, 'cluster_def_alpha', 0.05);
 addParameter(p, 'spatial_def', []); %neighbours or sourcemodel for space-resolved data with cluster correction
-addParameter(p, 'ci_latency', 'onset'); %none, onset
 addParameter(p, 'num_iterations',5000);
 addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
@@ -17,7 +17,7 @@ opt = p.Results;
 %get size info
 nd = ndims(accuracy); sz = size(accuracy); sz = sz(2:end); if numel(sz)==1, sz = [sz 1]; end; %size without subject dimension
 if ~ismember(nd,[2 3])
-    error('Accuracy must be a vector or matrix with subjects as first dimension and with maximum 3 dimensions');
+    error('Accuracy must be a matrix with subjects as first dimension and with maximum 3 dimensions');
 end
 
 %create null distribution; for omnibus thresholding only save maximal statistic
@@ -45,15 +45,7 @@ switch(opt.method)
             end
         end
         
-        stats.pval = pval; stats.method = 'omnibus'; stats.mask = pval<opt.alpha;
-        
-        %BOOTSTRAP ONSETS FOR BOTH DIMENSIONS%
-        if strcmp(opt.ci_latency,'onset')
-            
-            %[d1,d2] = find(stats.mask==1,1);
-            
-        end
-        
+        stats.pval = pval; stats.method = 'omnibus'; stats.mask = pval<opt.alpha;      
         
     case 'fdr'
         
@@ -78,48 +70,55 @@ switch(opt.method)
             
             for ii = 1:size(accuracy,3)
                 
-                [r_stat(:,i,ii),~,obs_stat(i,ii)] = randomize_accuracy(accuracy(:,i,ii),'num_iterations', opt.num_iterations, 'chance_level', opt.chance_level, 'statistic', opt.statistic);
+                [r_stat(:,i,ii),obs_stat(i,ii),~] = randomize_accuracy(accuracy(:,i,ii),'num_iterations', opt.num_iterations, 'chance_level', opt.chance_level, 'statistic', opt.statistic);
             end
         end
         
         %look for positive clusters in observed and random data: one-tailed
         prc = 100* (1 - opt.cluster_def_alpha); %get cluster-setting percentile
-        obs_map = obs_stat>=prctile(obs_stat,prc);
-        r_map = nan([opt.num_iterations sz]);
-        for i = 1:opt.num_iterations
-            r_map(i,:,:) = r_stat>=prctile(obs_stat,prc);
-        end
-        
+        obs_map = double(obs_stat>=prctile(obs_stat(:),prc));
+        r_map = double(r_stat>=prctile(obs_stat(:),prc)); %ones for values that should go in the clusters
         max_r_cls = zeros(1,opt.num_iterations); %maximal cluster distribution, only maxsize for now
         
         %include channel, source (grid) data, and time by time cases
-        if ~isempty(opt.spatial_def)
+        if ~isempty(opt.spatial_def) && isfield (opt.spatial_def, 'neighblabel') % channel case
             
             %here we will use some Fieldtrip functions to not reinvent the wheel
-            %first add the private FT functions to path
-            [~,ftpath] = ft_version; addpath(fullfile(ftpath, private));
+            %SPM toolbox needed for spm_bwlabel
+            [~,ftpath] = ft_version; private_path = fullfile(ftpath, 'private');
+            current_path = pwd;
             
-            if isfield (opt.spatial_def, 'neighblabel') % channel case
-                
-                cfg = [];
-                cfg.neighbours = opt.spatial_def;
-                cfg.channel = {opt.spatial_def(:).label};
-                conn = channelconnectivity(cfg);
-                
-                obs_cls = bwconncomp(obs_map, conn);
-                obs_labelmatrix = labelmatrix(obs_cls);
-                
-                for i = 1:opt.num_iterations
-                    
-                    r_tmp = squeeze(r_map(i,:,:));
-                    r_cls =  bwconncomp(r_tmp, conn);
-                    if ~isempty(r_cls.PixelIdxList)
-                        max_r_cls(i) = max(cellfun(@length,r_cls.PixelIdxList));
-                    end
-                end
-                
-                
-            elseif isfield(opt.spatial_def, 'dim') %sourcemodel case
+            cfg = [];
+            cfg.neighbours = opt.spatial_def;
+            cfg.channel = {opt.spatial_def(:).label};
+            cd(private_path);
+            conn = channelconnectivity(cfg);
+            
+            cfg = [];
+            cfg.dim = size(obs_stat);
+            cfg.connectivity = conn;
+            cfg.tail = 1; cfg.clustertail = 1;
+            cfg.feedback = 'yes';
+            cfg.clusterstatistic = 'maxsize';
+            cfg.clusteralpha = opt.cluster_def_alpha;
+            cfg.clustercritval = prctile(obs_stat(:),prc);
+            cfg.clusterthreshold = 'parametric';
+            cfg.numrandomization = size(r_stat,1);
+            rndmap = permute(r_stat,[2 3 1]); rndmap = reshape(rndmap,[numel(obs_stat), size(rndmap,3)]);
+            clstat = clusterstat(cfg, rndmap, obs_stat(:));
+            
+            stats.clusterlabels = reshape(clstat.posclusterslabelmat, size(obs_stat));
+            stats.clusterpvals = reshape(clstat.prob,size(obs_stat));
+            stats.clustersizes = [clstat.posclusters.clusterstat];
+            stats.clusters = cell(1,length(stats.clustersizes));
+            for i = 1:length(stats.clustersizes), stats.clusters{i} = find(stats.clusterlabels==i); end
+            stats.randclustermaxdistr = clstat.posdistribution;
+            
+            cd(current_path);
+            
+        else
+            
+            if ~isempty(opt.spatial_def) && isfield(opt.spatial_def, 'dim') %sourcemodel case
                 
                 conn = conndef(length(opt.spatial_def.dim), 'max');
                 obs_tmp = zeros(opt.spatial_def.dim);
@@ -138,42 +137,42 @@ switch(opt.method)
                     end
                 end
                 
+                
+            else
+                
+                %here we are simply looking for clusters w/o spatial structure
+                conn = conndef(ndims(obs_map),'max');
+                obs_cls = bwconncomp(obs_map,conn);
+                obs_labelmatrix = labelmatrix(obs_cls);
+                
+                for i = 1:opt.num_iterations
+                    
+                    r_tmp = squeeze(r_map(i,:,:));
+                    r_cls =  bwconncomp(r_tmp,conn);
+                    if ~isempty(r_cls.PixelIdxList)
+                        max_r_cls(i) = max(cellfun(@length,r_cls.PixelIdxList));
+                    end
+                end
+                
             end
             
-        else
-            
-            %here we are simply looking for clusters w/o spatial structure
-            conn = conndef(ndims(obs_map),'max');
-            obs_cls = bwconncomp(obs_map,conn);
-            obs_labelmatrix = labelmatrix(obs_cls);
-            
-            for i = 1:opt.num_iterations
-                
-                r_tmp = squeeze(r_map(i,:,:));
-                r_cls =  bwconncomp(r_tmp,conn);
-                if ~isempty(r_cls.PixelIdxList)
-                    max_r_cls(i) = max(cellfun(@length,r_cls.PixelIdxList));
+            %now compare observed with random clusters
+            obs_lengths = cellfun(@length, obs_cls.PixelIdxList);
+            if ~isempty(obs_lengths)
+                cluster_pvals = nan(1,length(obs_lengths));
+                for i = 1:length(obs_lengths)
+                    cluster_pvals(i) = (sum(max_r_cls>=obs_lengths(i))+1)/(opt.num_iterations+1);
                 end
             end
             
+            %save stuff
+            stats.clusters = obs_cls.PixelIdxList;
+            stats.clustersizes = obs_lengths;
+            stats.clusterlabelmatrix = obs_labelmatrix;
+            stats.clusterpvals = cluster_pvals;
+            stats.randclustermaxdistr = max_r_cls;
         end
-        
-        %now compare observed with random clusters
-        obs_lengths = cellfun(@length, obs_cls.PixelIdxList);
-        if ~isempty(obs_lengths)
-            cluster_pvals = nan(1,length(obs_lengths));
-            for i = 1:length(obs_lengths)
-                cluster_pvals(i) = (sum(max_r_cls>=obs_lengths(i))+1)/(obs.num_iterations+1);
-            end
-        end
-        
-        %save stuff
-        stats.clusters = obs_cls.PixelIdxList;
-        stats.clustersizes = obs_lengths;
-        stats.clusterlabelmatrix = obs_labelmatrix;
-        stats.clusterpvals = cluster_pvals;
-        stats.randclustermaxdistr = max_r_cls;
-        
+
         
     case {'mixed_of', 'mixed_fo'}
         
