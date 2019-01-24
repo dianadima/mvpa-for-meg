@@ -38,8 +38,9 @@ svm_model = train(train_labels, sparse(train_data), sprintf('-s %d -c %d -q 1', 
 
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights
-    svm_model.WeightPatterns = abs(cov(train_data)*results.Weights'/cov(train_data*results.Weights'));
-    svm_model.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns))/(max(results.WeightPatterns)-min(results.WeightPatterns));
+    svm_model.Weights = svm_model.w; svm_model = rmfield(svm_model,'w'); %just for consistency
+    svm_model.WeightPatterns = abs(cov(train_data)*svm_model.Weights'/cov(train_data*svm_model.Weights'));
+    svm_model.WeightPatternsNorm = (svm_model.WeightPatterns-min(svm_model.WeightPatterns))/(max(svm_model.WeightPatterns)-min(svm_model.WeightPatterns));
 end;
 
 end

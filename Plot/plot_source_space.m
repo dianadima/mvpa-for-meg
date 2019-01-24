@@ -65,11 +65,11 @@ if isempty(source_idx)
 else
     
     pow = nan(1,length(find(sourcemodel.inside==1)));
-    for i = 1:length(pow)
+    for i = 1:length(accuracy)
         if ~isnan(accuracy(i)) && accuracy(i)~=0
-            if strcmp(p.Results.style, 'centroid')
+            if strcmp(p.Results.style, 'centroid') && length(pow)==length(accuracy)
                     pow(i) = accuracy(i); %assign to centroids
-            elseif strcmp(p.Results.style, 'searchlight')
+            elseif strcmp(p.Results.style, 'searchlight') || length(pow)~=length(accuracy)
                      pow(source_idx{i}) = accuracy(i);
             end
         end
