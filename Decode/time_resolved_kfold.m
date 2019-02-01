@@ -1,27 +1,40 @@
 function [ results ] = time_resolved_kfold( data, labels, varargin )
 % Performs time-resolved SVM decoding of MEG data, using stratified k-fold cross-validation on each time window, and LibLinear SVM implementation.
 % Inputs: data, labels.
-% Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. You can also just provide numerical indices, in which case you don't need the structure.
+% Optional: 'sensor_idx', structure obtained using get_sensor_info - for channel selection. 
+%                        You can also just provide numerical indices, in which case you don't need the structure.
 %                        If you want to subselect features on source space data, you need to manually provide numerical indice (i.e. 'channels', [1:1000]).
 %          'channels', channel set set (string or cell array of strings; default: 'MEG').
 %          'decoding_window' (limits; default: [] - all timepoints). In  sampled time points (OR in seconds - only if you also provide time axis).
 %          'window_length' (in sampled time points; default: 1).
 %          'time', time axis, if you want to give the decoding window in seconds, you also need to provide a time axis, matching the second dimension of the data).
+%          'pseudo', default [], create pseudotrials: example [5 100], average groups of 5 trials with 100 random assignments of trials to groups
+%          'mnn', default true, perform multivariate noise normalization (recommended, Guggenmos et al. 2018)
 %             
-%           * other possible name-value pairs: SVM settings, svm evaluation metrics (see Documentation).
-% Outputs: structure containing classification performance metrics (for each timepoint).
-
+%           Below are other name-value pairs that control the SVM settings, with defaults:
+%           
+%          solver = 1; %only applies to liblinear: 1: L2 dual-problem; 2: L2 primal; 3:L2RL1L...
+%          boxconstraint = 1; --> C-parameter: Note, we don't have any options for optimizing this, need to write it separately if needed
+%          kfold = 5; --> number of folds for k-fold-cross-validation
+%          cv_indices = []; --> supply cross-validation indices (e.g. in cvpartition format)
+%          iterate_cv = 1; --> rounds of cross-validation to run
+%          standardize = true; --> standardize features using mean and SD of training set (recommended)
+%          weights = false; --> calculate weights (by retraining model on whole dataset)
+%
+% Outputs: structure containing classification performance metrics (for each timepoint and cross-validation round).
+%
+% DC Dima 2018 (diana.c.dima@gmail.com)
 
 %parse inputs
-dec_args = decoding_args;
-svm_par = svm_args;
+dec_args = args.decoding_args;
+svm_par = args.svm_args;
 list = [fieldnames(dec_args); fieldnames(svm_par)];
 p = inputParser;
 
-for i = 1:length(properties(decoding_args))
+for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end
-for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
+for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end
 addParameter(p, 'sensor_idx', []);
@@ -29,7 +42,7 @@ addParameter(p, 'sensor_idx', []);
 
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx','pseudo','mnn'}); %converted struct will be fed into decoding function
 clear p;
 
 %get channel indices and time axis. Numerical channel indices take priority

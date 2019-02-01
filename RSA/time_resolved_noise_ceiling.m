@@ -1,6 +1,9 @@
 function [ dynamic_noise_ceiling ] = time_resolved_noise_ceiling( subject_rdms )
-%UNTITLED10 Summary of this function goes here
-%   Detailed explanation goes here
+%Calculate time and space - resolved upper and lower bounds of noise ceiling using leave-one-out approach (Nili et al., 2014)
+%Input: subject rdm matrix (features x time/space x subjects, or features x time x space x subjects)
+%Output: noise ceiling bounds (upper,lower)
+%
+%DC Dima 2018 (diana.c.dima@gmail.com)
 
 %deal with one time window case
 if length(size(subject_rdms))==3

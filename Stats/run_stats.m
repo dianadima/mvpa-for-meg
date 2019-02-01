@@ -1,12 +1,25 @@
 function [stats] = run_stats(accuracy, varargin)
+% Run sign-shuffling permutation testing (one-tailed) on accuracy measures, correcting for multiple comparisons across time/space/both.
+%
 % Inputs: accuracy can be: subjects x time, subjects x space x time, subjects x time x time
 % NOTE: If data is space by time, make sure time is last dimension! 
-% This is strictly fixed effects - add a possibility to loop through subjects...
+% 
+% Optional inputs: method -- default omnibus, method for correcting for multiple comparisons: cluster, omnibus, fdr, mixed_of (omnibus/fdr along dimensions 2 and 3), mixed_fo (fdr and omnibus along dim 2 and 3 respectively)
+%                  spatial_def -- must be provided for cluster correction (sensor-space neighbours structure, or sourcemodel for source-space)
+%                  alpha -- default 0.05
+%                  clusteralpha -- cluster-defining alpha, default 0.05
+%                  num_iterations -- number of sign permutations, default 5000
+%                  chance_level -- will be subtracted from accuracy, default 50
+%                  statistic -- currently only mean 
+%
+% Output: stats structure containing p-values and other info
+%
+% DC Dima 2018 (diana.c.dima@gmail.com)
 
 p = inputParser;
 addParameter(p, 'method','omnibus'); %cluster, omnibus, fdr, mixed_of, mixed_fo (specify for each dimension)
 addParameter(p, 'alpha', 0.05);
-addParameter(p, 'cluster_def_alpha', 0.05);
+addParameter(p, 'clusteralpha', 0.05);
 addParameter(p, 'spatial_def', []); %neighbours or sourcemodel for space-resolved data with cluster correction
 addParameter(p, 'num_iterations',5000);
 addParameter(p, 'chance_level', 50);
@@ -75,7 +88,7 @@ switch(opt.method)
         end
         
         %look for positive clusters in observed and random data: one-tailed
-        prc = 100* (1 - opt.cluster_def_alpha); %get cluster-setting percentile
+        prc = 100* (1 - opt.clusteralpha); %get cluster-setting percentile
         obs_map = double(obs_stat>=prctile(obs_stat(:),prc));
         r_map = double(r_stat>=prctile(obs_stat(:),prc)); %ones for values that should go in the clusters
         max_r_cls = zeros(1,opt.num_iterations); %maximal cluster distribution, only maxsize for now
@@ -100,7 +113,7 @@ switch(opt.method)
             cfg.tail = 1; cfg.clustertail = 1;
             cfg.feedback = 'yes';
             cfg.clusterstatistic = 'maxsize';
-            cfg.clusteralpha = opt.cluster_def_alpha;
+            cfg.clusteralpha = opt.clusteralpha;
             cfg.clustercritval = prctile(obs_stat(:),prc);
             cfg.clusterthreshold = 'parametric';
             cfg.numrandomization = size(r_stat,1);

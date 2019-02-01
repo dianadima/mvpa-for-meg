@@ -1,6 +1,9 @@
 function [ noise_ceiling ] = get_noise_ceiling( subject_rdms)
-%UNTITLED9 Summary of this function goes here
-%   Detailed explanation goes here
+% Calculate upper and lower bounds of noise ceiling using leave-one-out approach (Nili et al., 2014)
+% Input: subject rdm matrix (features x subjects)
+% Output: noise ceiling bounds (upper,lower)
+%
+% DC Dima 2018 (diana.c.dima@gmail.com)
 
 average_rdm = squeeze(nanmean(subject_rdms,2)); %average last dim
 nc_sub = zeros(2,size(subject_rdms,2));

@@ -1,10 +1,13 @@
 function [data] = read_meg_data(dataset, condition, varargin)
+% Read in & preprocess MEG data epochs around a specified trigger using Fieldtrip toolbox (Oostenveld et al., 2011).
 % Inputs: dataset, condition; optional: prestimulus, poststimulus,
-% baseline, bandpass filter, resampling frequency
-% Output: preprocessed MEG data. Channels x time x trials matrix.
-% Uses fieldtrip toolbox (Oostenveld et al., 2011) to read in MEG data for a specified condition.
+% baseline, bandpass filter, resampling frequency (see ft_definetrial & ft_preprocessing help)
+% For a low-pass/high-pass filter, set lower or upper bound of bandpass filter to 0.
+% Output: preprocessed MEG data in a channels x time x trials matrix.
+%
+% DC Dima 2017 (diana.c.dima@gmail.com)
 
-opt = preproc_args;
+opt = preproc.preproc_args;
 list = fieldnames(opt);
 p = inputParser;
 for i = 1:length(list)

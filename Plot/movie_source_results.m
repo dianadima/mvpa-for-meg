@@ -1,22 +1,30 @@
-function [] = movie_source_results( accuracy, output_file, source_idx, varargin )
-% Plot sensor-space searchlight decoding results as a movie.
-% Inputs: results: matrix of accuracy/decoding performance. Must be channels x time, or subjects x channels x time.
-%         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).
-%         output_file: movie filename
+function [] = movie_source_results( accuracy, source_idx, output_file, varargin )
+% Plot source-space whole-brain, searchlight or ROI decoding results as a movie.
+% Inputs: accuracy: matrix of accuracy/decoding performance. Must be sources x time, or subjects x sources x time.
+%         source_idx: source grouping structure obtained using get_source_info (has ROI or searchlight voxel indices).
+%                     Note: for whole-brain decoding, give source indices and use 'centroid' style (see below).
+%         output_file: movie filename, will be saved in current directory
+%
 % Optional inputs:
-%   'time' (default []) - time axis, to display next to each frame
-%   'clim' (default [40 100]): colour limits
+%   'sourcemodel' (default 10 mm grid) - sourcemodel used in source reconstruction & plotting
+%   'colorlim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
 %   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
-%   'style', default 'searchlight' (can be 'searchlight' or 'centroid')
-% Need to add capability for ROI and searchlight plotting
+%   'style' (default 'searchlight'), can be 'searchlight' or 'centroid' - value assigned to cluster of neighbouring sources or only centroid
+%   'roi' (default []), region of interest (AAL label)
+%   'framerate' (default 2)
+%   'view' (default [0 90]), default from above
+%   'hemisphere' (default 'both'), can be 'right', 'left'
+%   'inflated' (default true), inflated brain surface
+%
+% DC Dima 2018 (diana.c.dima@gmail.com)
+
 [~, ftdir] = ft_version; %get FT directory
 
 p = inputParser;
 addParameter(p, 'sourcemodel', fullfile(ftdir, 'template', 'sourcemodel', 'standard_sourcemodel3d10mm.mat'));
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'colorlim', [40 100]);
-addParameter(p, 'visible', 'on');
 addParameter(p, 'inflated', true);
 addParameter(p, 'hemisphere', 'both');
 addParameter(p, 'roi', []);

@@ -1,6 +1,9 @@
 function D = crossvalED (D_train, D_test)
-%cross-validated squared Euclidean distance
-%input: stimulus by features matrix (computes pairwise distance between row vectors)
+% cross-validated squared Euclidean distance
+% input: stimulus by features training & test matrices 
+% computes pairwise distance between row vectors
+%
+% DC Dima 2018 (diana.c.dima@gmail.com)
 
 [n,p] = size(D_train);
 
