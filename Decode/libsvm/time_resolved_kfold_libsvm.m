@@ -36,7 +36,7 @@ p = inputParser;
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
-for ii = i+1:length(properties(args.dec_args))+length(properties(args.svm_args))
+for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 addParameter(p, 'AUC', true);
@@ -45,7 +45,7 @@ addParameter(p, 'sensor_idx', []);
 
 parse(p, varargin{:});
 dec_args = p.Results;
-svm_par = rmfield(struct(dec_args), {'window_length','channels','sensor_idx','decoding_window', 'time'}); %converted struct will be fed into decoding function
+svm_par = rmfield(struct(dec_args), {'window_length','channels','sensor_idx','decoding_window', 'time','mnn','pseudo'}); %converted struct will be fed into decoding function
 clear p;
 
 %get channel indices and time axis. Numerical channel indices take priority

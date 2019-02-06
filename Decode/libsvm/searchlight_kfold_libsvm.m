@@ -32,11 +32,9 @@ p = inputParser;
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
-for ii = i+1:length(properties(args.dec_args))+length(properties(args.svm_args))
+for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
-
-addParameter(p,'time',[]);
 
 
 parse(p, varargin{:});

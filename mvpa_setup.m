@@ -1,5 +1,5 @@
 %set toolbox paths
-fprintf('\nThese scripts were tested with Matlab R2015a and Fieldtrip 2016.\n')
+fprintf('\nThese scripts were tested with Matlab R2015a and Fieldtrip-20190205.\n')
 toolbox_path = strrep(mfilename('fullpath'),'mvpa_setup','');
 
 %add dependencies with subdirectories
