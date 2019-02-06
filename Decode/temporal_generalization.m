@@ -31,10 +31,10 @@ p = inputParser;
 
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
-end;
+end
 for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
-end;
+end
 addParameter(p, 'sensor_idx', []);
 addParameter(p, 'train_idx', []);
 addParameter(p, 'test_idx', []);
@@ -60,7 +60,7 @@ else
     if ~exist('chan_idx', 'var')
         chan_idx = 1:size(data,1);
     end;
-end;
+end
 
 %create time axis
 if ~isempty(dec_args.time)
@@ -69,12 +69,12 @@ elseif ~isempty(dec_args.sensor_idx) && isfield(sensor_idx, 'time')
     time = sensor_idx.time;
 else
     time = 1:size(data,2);
-end;
+end
 
 if length(time)~=size(data,2)
     time = 1:size(data,2);
     fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
-end;
+end
 
 
 if ~isempty(dec_args.decoding_window)
@@ -89,15 +89,15 @@ if ~isempty(dec_args.decoding_window)
     else
         fprintf('Warning: end timepoint not found, decoding until end of data...\n');
         lims(2) = size(data,2);
-    end;
+    end
         
 else
     lims = [1 size(data,2)];
-end;
+end
 
 if size(data,2)<lims(2)
     lims(2) = size(data,2);
-end;
+end
 
 %we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used, and indices can be provided
 if isempty (dec_args.train_idx)
@@ -107,7 +107,7 @@ if isempty (dec_args.train_idx)
 else
     train_idx = dec_args.train_idx;
     test_idx = dec_args.test_idx;
-end;
+end
 
 if ~isempty(dec_args.pseudo)
     
@@ -124,25 +124,18 @@ if ~isempty(dec_args.pseudo)
     end;
 
     clear data labels;
-    
-end;
+else
+    train_data = data(:,:,train_idx);
+    test_data = data(:,:,test_idx); 
+    train_labels = labels(train_idx);
+    test_labels = labels(test_idx);
+end
 
-% if dec_args.mnn
-%     sigma_time = zeros(2,size(data,2), size(data,1), size(data,1));
-%     for t = 1:size(data,2)
-%         sigma_time(1,t,:,:) = cov1para(squeeze(data(:,t,:))');
-%     end;
-%     sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
-%     sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
-%     for t = 1:size(train_data,2)
-%         train_data(:,t,:) = (squeeze(train_data(:,t,:))'*sigma_inv)';
-%         test_data(:,t,:) = (squeeze(test_data(:,t,:))'*sigma_inv)';
-%         
-%     end;
-% end;
+if dec_args.mnn
+        [train_data,test_data] = whiten_data(train_data,train_labels,test_data);
+end
 
 train_data = arrayfun(@(i) reshape(train_data(:,i:i+dec_args.window_length-1,:), size(train_data,1)*dec_args.window_length, size(train_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
-whitened_data = arrayfun(@i 
 test_data = arrayfun(@(i) reshape(test_data(:,i:i+dec_args.window_length-1,:), size(test_data,1)*dec_args.window_length, size(test_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
 
 results = zeros(length(train_data), length(train_data));
