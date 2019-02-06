@@ -28,15 +28,15 @@ function [ results ] = time_resolved_kfold_libsvm( data, labels, varargin )
 addpath(strrep(mfilename('fullpath'),fullfile('libsvm','time_resolved_kfold_libsvm'),'')); %add parent directory to path
 
 %parse inputs
-dec_args = decoding_args;
-svm_par = svm_args;
+dec_args = args.decoding_args;
+svm_par = args.svm_args;
 list = [fieldnames(dec_args); fieldnames(svm_par)];
 p = inputParser;
 
-for i = 1:length(properties(decoding_args))
+for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
-for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
+for ii = i+1:length(properties(args.dec_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 addParameter(p, 'AUC', true);

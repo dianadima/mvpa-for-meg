@@ -22,7 +22,7 @@ cfg.dataset = dataset;
 cfg.trialdef.prestim = opt.prestim;
 cfg.trialdef.poststim = opt.poststim;
 cfg.trialdef.eventtype = condition;
-cfg.trialfun = 'ft_trialfun_NoBadTrials';
+cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
 %preprocessing options

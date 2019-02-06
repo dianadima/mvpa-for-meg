@@ -30,23 +30,37 @@ parse(p, varargin{:});
 
 %% read in mri
 
-%[path,~] = fileparts(dataset); 
-raw_mri = strrep(mri_file, '.mat', '_realigned.mat');
+[~,~,mritype] = fileparts(mri_file);
+seg_mri = strrep(mri_file, mritype, 'seg.mat');
 
-if exist(mri_file, 'file')
-    seg = load(mri_file);
-    mri = load(raw_mri);
-else
-    mri = load(raw_mri);
-    %mri = ft_read_mri(raw_mri);
+if strcmp(mritype,'mat')  
+    if exist(seg_mri, 'file')
+        seg = load(seg_mri);
+        mri = load(mri_file);
+    elseif ~exist(mri_file, 'file')
+        error('Can`t find MRI.')
+    else
+        mri = load(mri_file);
+        %mri = ft_read_mri(raw_mri);
+        mri = ft_convert_units(mri, 'mm');
+        
+        cfg = [];
+        seg = ft_volumesegment(cfg, mri); %default - tissue probability map
+        seg.transform = mri.transform;
+        seg.anatomy = mri.anatomy;
+        save(seg_mri, '-struct', 'seg');
+    end   
+else %assume .mri or .nii
+    mri = ft_read_mri(mri_file);
     mri = ft_convert_units(mri, 'mm');
+    mri.coordsys = p.Results.coordsys;
     
     cfg = [];
     seg = ft_volumesegment(cfg, mri); %default - tissue probability map
     seg.transform = mri.transform;
-    seg.anatomy = mri.anatomy; 
+    seg.anatomy = mri.anatomy;
     save(seg_mri, '-struct', 'seg');
-end;
+end
 
 %% read in data
 %COND 1

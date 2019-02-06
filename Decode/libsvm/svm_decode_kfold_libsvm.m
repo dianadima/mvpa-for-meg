@@ -27,10 +27,10 @@ function [ results ] = svm_decode_kfold_libsvm( data, labels, varargin )
 addpath(strrep(mfilename('fullpath'),fullfile('libsvm','svm_decode_kfold_libsvm'),''));
 
 %parse inputs
-svm_par = svm_args;
+svm_par = args.svm_args;
 list = fieldnames(svm_par);
 p = inputParser;
-for ii = 1:length(properties(svm_args))
+for ii = 1:length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
 end;
 addParameter(p, 'AUC', true);
