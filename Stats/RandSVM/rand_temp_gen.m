@@ -25,7 +25,7 @@ for i = 1:length(properties(decoding_args))
 end;
 for ii = i+1:length(properties(dec_args))+length(properties(svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
-end;
+end
 addParameter(p, 'sensor_idx', []);
 addParameter(p, 'train_idx', []);
 addParameter(p, 'test_idx', []);
@@ -37,7 +37,7 @@ clear p;
 %get channel indices and time axis. Numerical channel indices take priority
 if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
-end;
+end
 if (~isempty(dec_args.sensor_idx)) && (~strcmp (dec_args.channels, 'MEG'))
     if ~exist('chan_idx', 'var')
         chan = [];
@@ -50,8 +50,8 @@ if (~isempty(dec_args.sensor_idx)) && (~strcmp (dec_args.channels, 'MEG'))
 else
     if ~exist('chan_idx', 'var')
         chan_idx = 1:size(data,1);
-    end;
-end;
+    end
+end
 
 %create time axis
 if ~isempty(dec_args.time)
@@ -60,12 +60,12 @@ elseif ~isempty(dec_args.sensor_idx) && isfield(sensor_idx, 'time')
     time = sensor_idx.time;
 else
     time = 1:size(data,2);
-end;
+end
 
 if length(time)~=size(data,2)
     time = 1:size(data,2);
     fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
-end;
+end
 
 
 if ~isempty(dec_args.decoding_window)
@@ -84,11 +84,11 @@ if ~isempty(dec_args.decoding_window)
         
 else
     lims = [1 size(data,2)];
-end;
+end
 
 if size(data,2)<lims(2)
     lims(2) = size(data,2);
-end;
+end
 
 %here we create a cell array containing classification data for each time window
 %we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used
@@ -99,7 +99,7 @@ if isempty (dec_args.train_idx)
 else
     train_idx = dec_args.train_idx;
     test_idx = dec_args.test_idx;
-end;
+end
 
 if ~isempty(dec_args.pseudo)
     
@@ -117,20 +117,16 @@ if ~isempty(dec_args.pseudo)
 
     clear data labels;
     
-end;
+else
+    train_data = data(:,:,train_idx);
+    test_data = data(:,:,test_idx); 
+    train_labels = labels(train_idx);
+    test_labels = labels(test_idx);
+end
 
 if dec_args.mnn
-    sigma_time = zeros(size(train_data,2), size(train_data,1), size(train_data,1));
-    for t = 1:size(train_data,2)
-        sigma_time(t,:,:) = cov1para(squeeze(train_data(:,t,:))');
-    end;
-    sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
-    for t = 1:size(train_data,2)
-        train_data(:,t,:) = (squeeze(train_data(:,t,:))'*sigma_inv)';
-        test_data(:,t,:) = (squeeze(test_data(:,t,:))'*sigma_inv)';
-        
-    end;
-end;
+        [train_data,test_data] = whiten_data(train_data,train_labels,test_data);
+end
 
 train_data = arrayfun(@(i) reshape(train_data(:,i:i+dec_args.window_length-1,:), size(train_data,1)*dec_args.window_length, size(train_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
 test_data = arrayfun(@(i) reshape(test_data(:,i:i+dec_args.window_length-1,:), size(test_data,1)*dec_args.window_length, size(test_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %features are channelsxtime,observations are trials    
@@ -163,11 +159,11 @@ for iter = 1:num_iterations
             [~, accuracy, ~] = predict(labelst, sparse(test_data_i), svm_model{t}, '-q 1');
             results(iter,t,i) = accuracy(1);
             
-        end;
+        end
         
-    end;
+    end
     
-end;
+end
             
 end
 
