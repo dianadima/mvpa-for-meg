@@ -40,7 +40,33 @@ results = struct;
 
 for icv = 1: svm_par.iterate_cv
 
-    cv = cvpartition(labels, 'kfold', svm_par.kfold);
+    %cross-validation indices - convoluted but can be kept constant if need be
+    if isempty(svm_par.cv_indices)
+        cv = cvpartition(labels, 'kfold', svm_par.kfold);
+    else
+        if iscell(svm_par.cv_indices)
+            cv = svm_par.cv_indices{icv};
+        else
+            cv = svm_par.cv_indices;
+        end
+    end
+    
+    if isa(cv,'cvpartition')
+        cv_train = zeros(length(labels),1); cv_test = cv_train;
+        for ii = 1:svm_par.kfold
+            cv_train(:,ii) = cv.training(ii);
+            cv_test(:,ii) = cv.test(ii);
+        end
+    else
+        if size(cv,2)~=svm_par.kfold
+            error('Crossval indices must be supplied in indices x folds matrix or logical array.');
+        end
+        cv_train = cv;
+        cv_test = abs(cv_train-1);
+    end
+    
+    cv_train = logical(cv_train); cv_test = logical(cv_test);
+    cv_idx = cv_train; %this will be saved for later
     allscore = zeros(length(labels),1); accuracy = zeros(3,svm_par.kfold);
     
     for ii = 1:svm_par.kfold
@@ -48,11 +74,11 @@ for icv = 1: svm_par.iterate_cv
         %scale values using range and minimum of training set
         kdata = data; %ensures we keep original data
         if svm_par.standardize
-            data = (kdata - repmat(min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(data(cv.training(ii),:), [], 1) - min(data(cv.training(ii),:), [], 1), size(kdata, 1), 1);
+            data = (kdata - repmat(min(data(cv_train(:,ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(data(cv_train(:,ii),:), [], 1) - min(data(cv_train(:,ii),:), [], 1), size(kdata, 1), 1);
         end;
         
-        svm_model = train(labels(cv.training(ii)), sparse(data(cv.training(ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
-        [allscore(cv.test(ii)), accuracy(:,ii), ~] = predict(labels(cv.test(ii)), sparse(data(cv.test(ii),:)), svm_model, '-q 1');
+        svm_model = train(labels(cv_train(:,ii)), sparse(data(cv_train(:,ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
+        [allscore(cv_test(:,ii)), accuracy(:,ii), ~] = predict(labels(cv_test(:,ii)), sparse(data(cv_test(:,ii),:)), svm_model, '-q 1');
         
     end;
 
@@ -67,7 +93,7 @@ for icv = 1: svm_par.iterate_cv
     results.Fscore1(icv) = (2*PP*results.Sensitivity(icv))/(PP+results.Sensitivity(icv));
     results.Fscore2(icv) = (2*NP*results.Specificity(icv))/(NP+results.Specificity(icv));
     results.WeightedFscore(icv) = ((sum(results.Confusion{icv}(:,1))/sum(results.Confusion{icv}(:)))*results.Fscore1(icv)) + ((sum(results.Confusion{icv}(:,2))/sum(results.Confusion{icv}(:)))*results.Fscore2(icv));
-
+    results.cv_indices(icv,:,:) = cv_idx; %this can be reused
 end;
 
 %calculate weights and compute activation patterns as per Haufe (2014)
