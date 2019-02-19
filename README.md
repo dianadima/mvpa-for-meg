@@ -6,7 +6,7 @@ Work in progress: scripts for performing Representational Similarity Analysis of
 ## [Prepare](https://github.com/dianadima/mvpa-for-meg/wiki/Prepare)
 Scripts for preprocessing sensor-level MEG data, source-reconstructing MEG data with a beamformer, and preparing data for decoding (creating pseudo-trials, whitening, getting spatial clustering information for spatially-resolved MVPA).
 
-## Decode
+## [Decode](https://github.com/dianadima/mvpa-for-meg/wiki/Decode)
 Scripts for decoding MEG data across time (time-resolved and temporal generalization) and space (searchlight, region-of-interest, source/channel selection, whole-brain), with kfold or hold-out cross-validation.
 The main scripts use the LibLinear SVM. Scripts based on LibSVM and Matlab SVM are included in subfolders but have not been updated/tested...
 
