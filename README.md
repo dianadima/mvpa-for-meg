@@ -3,7 +3,7 @@ Work in progress: scripts for performing Representational Similarity Analysis of
 
 # Structure
 
-## Prepare
+## [Prepare](https://github.com/dianadima/mvpa-for-meg/wiki/Prepare)
 Scripts for preprocessing sensor-level MEG data, source-reconstructing MEG data with a beamformer, and preparing data for decoding (creating pseudo-trials, whitening, getting spatial clustering information for spatially-resolved MVPA).
 
 ## Decode
