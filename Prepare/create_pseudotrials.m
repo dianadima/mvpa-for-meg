@@ -3,7 +3,7 @@ function [ newdata, newlabels ] = create_pseudotrials( data, labels, n_trials, n
 % (!) Make sure that last dimension of data is trial dimension. No singleton dimensions.
 % Inputs:
 %       data = n-dimensional matrix with trials as last dimension.
-%       labels = class labels, of same length as last dimension of data. Any number of classes is supported.
+%       labels = class labels, of same length as last dimension of data. Any number of classes is supported. For one class, input labels as [].
 %       n_trials = number of trials to average together (e.g., 5).
 %       n_perm = number of times to repeat the averaging with random assignment of trials to subgroups.
 %                 If n_perm > 1, output will contain permutations x data x trials.
@@ -23,8 +23,8 @@ if isempty(labels)
     idx{1,1} = 1:size(data, 1);
     trlsize = floor(size(data,1)/n_trials);
 else
-    n_cond = length(unique(labels));
     classes = unique(labels);
+    n_cond = length(classes);
     idx = repmat({':'}, n_cond, ndims(data));
     trlsize = zeros(1,n_cond);
     for i = 1:n_cond
