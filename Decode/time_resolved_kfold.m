@@ -117,7 +117,7 @@ for icv = 1: svm_par.iterate_cv
     
     %cross-validation indices - convoluted but can be kept constant if need be
     if isempty(dec_args.cv_indices)
-        cv = cvpartition(labels, 'kfold', svm_par.kfold);
+        cv = cvpartition(labels, 'kfold', dec_args.kfold);
     else
         if iscell(dec_args.cv_indices)
             cv = dec_args.cv_indices{icv};
@@ -147,10 +147,10 @@ for icv = 1: svm_par.iterate_cv
     if ~isempty(dec_args.pseudo)
         
         fprintf('\nCreating pseudotrials....\r');
-        all_data = cell(1,5); all_labels = cell(1,5);
+        all_data = cell(1,dec_args.kfold); all_labels = cell(1,dec_args.kfold);
         cv_test_tmp = zeros(1,5); %we have to redo the crossval indices
        
-        for ii = 1:5
+        for ii = 1:dec_args.kfold
             [ps_data, ps_labels] = create_pseudotrials(data(:,:,cv_test(:,ii)), labels(cv_test(:,ii)), dec_args.pseudo(1), dec_args.pseudo(2));
             if ndims(ps_data)>3
                 ps_data = reshape(ps_data, size(ps_data,1), size(ps_data,2), size(ps_data,3)*size(ps_data,4));
@@ -177,9 +177,9 @@ for icv = 1: svm_par.iterate_cv
     allscore = zeros(length(labels),size(data,2)); accuracy = zeros(3,5, floor(size(data,2)/dec_args.window_length));
     fprintf(['\rDecoding fold ' repmat(' ',1,numel([num2str(ii) num2str(length(svm_par.kfold))])+8)]);
     
-    for ii = 1:svm_par.kfold
+    for ii = 1:dec_args.kfold
 
-        fprintf((repmat('\b',1,numel([num2str(ii) num2str(length(svm_par.kfold))])+8)));
+        fprintf((repmat('\b',1,numel([num2str(ii) num2str(length(svm_par.kfold))])+7+length(num2str(dec_args.kfold)))));
                 
         if dec_args.mnn 
             class_id = unique(labels); class1 = find(labels==class_id(1)); class2 = find(labels==class_id(2)); %this needs to be done separately for each condition

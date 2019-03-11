@@ -20,8 +20,8 @@ cfg = [];
 cfg.dataset = dataset;
 
 %read in data
-cfg.trialdef.prestim = opt.prestim;
-cfg.trialdef.poststim = opt.poststim;
+cfg.trialdef.prestim = abs(opt.prestim);
+cfg.trialdef.poststim = abs(opt.poststim);
 cfg.trialdef.eventtype = condition;
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
@@ -35,13 +35,13 @@ if ~isempty(opt.bandpass_filter)
     elseif opt.bandpass_filter(2) == 0
         cfg.hpfilter = 'yes';
         cfg.hpreq = opt.bandpass_filter(1);
-        cfg.padding = prestim + poststim + 4; %2 s of padding both sides
+        cfg.padding = abs(opt.prestim) + abs(opt.poststim) + 4; %2 s of padding both sides
         cfg.padtype = 'mirror';
     else
         cfg.bpfilter = 'yes';
         cfg.bpfreq = opt.bandpass_filter;
         cfg.bpfiltord = 3;
-        cfg.padding = prestim + poststim + 4; %2 s of padding both sides
+        cfg.padding = abs(opt.prestim) + abs(opt.poststim) + 4; %2 s of padding both sides
         cfg.padtype = 'mirror';
     end;
 end;
