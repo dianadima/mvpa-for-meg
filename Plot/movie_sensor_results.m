@@ -1,4 +1,4 @@
-function [ ] = movie_sens_searchlight_results( results, neighbours, output_file, varargin )
+function [ ] = movie_sensor_results( results, neighbours, output_file, varargin )
 % Plot sensor-space searchlight decoding results as a movie.
 % Inputs: results: matrix of accuracy/decoding performance. Must be channels x time, or subjects x channels x time.
 %         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).

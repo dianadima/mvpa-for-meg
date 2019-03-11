@@ -1,4 +1,4 @@
-function [ ] = plot_sens_searchlight_results(results, neighbours, varargin)
+function [ ] = plot_sensor_results(results, neighbours, varargin)
 % Plots results of sensor-space searchlight decoding.
 % Inputs: results: matrix of accuracy/decoding performance. Must be channels, channels x time, or subjects x channels x time.
 %         Note that if you specify a 'window_length'>1, accuracy will be averaged over the time window (because it uses ft_topoplotER). 
