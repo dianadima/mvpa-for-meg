@@ -14,6 +14,7 @@ for i = 1:length(list)
     addParameter(p, list{i}, opt.(list{i}));
 end;
 parse(p, varargin{:});
+opt = p.Results;
 
 cfg = [];
 cfg.dataset = dataset;
