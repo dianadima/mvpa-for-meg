@@ -27,7 +27,7 @@ parse(p, varargin{:});
 if isempty(p.Results.decoding_window)
     [neighbours.time] = deal(-(hdr.nSamplesPre/hdr.Fs):(1/p.Results.sample_rate):((hdr.nSamples-hdr.nSamplesPre)/hdr.Fs));
 else
-    [neighbours.time] = deal(p.Results.decoding_window:(1/p.Results.sample_rate):p.Results.decoding_window(2));
+    [neighbours.time] = deal(p.Results.decoding_window:(1/p.Results.sample_rate):p.Results.decoding_window(2)-1/p.Results.sample_rate);
 end;
 
 

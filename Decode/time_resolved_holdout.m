@@ -109,6 +109,10 @@ end
 results.Confusion = cat(3,results_tmp(:).Confusion);
 results.Sensitivity = cell2mat({results_tmp(:).Sensitivity});
 results.Specificity = cell2mat({results_tmp(:).Specificity});
+results.PredictedLabels = cell2mat({results_tmp(:).PredictedLabels});
+if ~isempty(dec_args.pseudo)
+    results.PseudoLabels = test_labels;
+end
 clear train_data_svm test_data_svm;
 
 end

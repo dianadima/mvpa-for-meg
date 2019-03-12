@@ -51,7 +51,7 @@ cfg.channel = 'MEG';
 if ~isempty(opt.baseline)
     cfg.demean = 'yes';
     cfg.baselinewindow = opt.baseline; %baselining
-    cfg.detrend = 'yes';
+    cfg.detrend = 'no';
 end;
 data = ft_preprocessing(cfg);
 

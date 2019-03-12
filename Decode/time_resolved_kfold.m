@@ -85,15 +85,15 @@ end
 %subselect data corresponding to decoding window requested
 if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
-        lims(1) = find(round(time,3)==dec_args.decoding_window(1));
+        lims(1) = find(round(time,3)==dec_args.decoding_window(1),1);
     else
-        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
+        fprintf('\nWarning: starting timepoint not found, starting from beginning of data...\n');
         lims(1) = 1;
     end
     if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
+        lims(2) = find(round(time,3)==dec_args.decoding_window(2),1);
     else
-        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
+        fprintf('\nWarning: end timepoint not found, decoding until end of data...\n');
         lims(2) = size(data,2);
     end
     
@@ -148,7 +148,7 @@ for icv = 1: svm_par.iterate_cv
         
         fprintf('\nCreating pseudotrials....\r');
         all_data = cell(1,dec_args.kfold); all_labels = cell(1,dec_args.kfold);
-        cv_test_tmp = zeros(1,5); %we have to redo the crossval indices
+        cv_test_tmp = zeros(1,dec_args.kfold); %we have to redo the crossval indices
        
         for ii = 1:dec_args.kfold
             [ps_data, ps_labels] = create_pseudotrials(data(:,:,cv_test(:,ii)), labels(cv_test(:,ii)), dec_args.pseudo(1), dec_args.pseudo(2));
@@ -174,7 +174,8 @@ for icv = 1: svm_par.iterate_cv
 
     end
     
-    allscore = zeros(length(labels),size(data,2)); accuracy = zeros(3,5, floor(size(data,2)/dec_args.window_length));
+    tp = 1:dec_args.window_length:size(data,2)-dec_args.window_length+1;
+    allscore = zeros(length(labels),length(tp)); accuracy = zeros(3,dec_args.kfold, floor(size(data,2)/dec_args.window_length));
     fprintf(['\rDecoding fold ' repmat(' ',1,numel([num2str(ii) num2str(length(svm_par.kfold))])+8)]);
     
     for ii = 1:dec_args.kfold
@@ -198,7 +199,6 @@ for icv = 1: svm_par.iterate_cv
             end
         end
         
-        tp = 1:dec_args.window_length:size(data,2)-dec_args.window_length+1;
         fprintf('%d out of %d', ii, svm_par.kfold); 
         
         for t = 1:length(tp)
@@ -231,6 +231,10 @@ for icv = 1: svm_par.iterate_cv
         end
     end
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
+    results.PredictedLabels = allscore;
+    if ~isempty(dec_args.pseudo)
+        results.PseudoLabels = labels;
+    end
     
     
     %calculate weights and compute activation patterns as per Haufe (2014)

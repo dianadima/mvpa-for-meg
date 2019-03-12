@@ -94,6 +94,7 @@ for icv = 1: svm_par.iterate_cv
     results.Fscore2(icv) = (2*NP*results.Specificity(icv))/(NP+results.Specificity(icv));
     results.WeightedFscore(icv) = ((sum(results.Confusion{icv}(:,1))/sum(results.Confusion{icv}(:)))*results.Fscore1(icv)) + ((sum(results.Confusion{icv}(:,2))/sum(results.Confusion{icv}(:)))*results.Fscore2(icv));
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
+    results.PredictedLabels = allscore;
 end;
 
 %calculate weights and compute activation patterns as per Haufe (2014)

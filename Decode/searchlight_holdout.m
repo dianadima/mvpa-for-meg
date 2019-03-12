@@ -62,7 +62,7 @@ end;
 
 if length(time)~=size(train_data,2)
     time = 1:size(train_data,2);
-    fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
+    fprintf('\nWarning: time axis does not match dataset size. Replacing with default time axis...');
 end;
 
 %time limits for decoding window
