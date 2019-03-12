@@ -92,7 +92,7 @@ end
 
 %whiten data if requested
 if dec_args.mnn
-    [train_data,train_labels,test_data,test_labels ] = whiten_data(train_data,train_labels,test_data,test_labels);
+    [train_data,test_data] = whiten_data(train_data,train_labels,test_data);
 end
 
 fprintf('\nRunning classifier... '); 
@@ -104,7 +104,13 @@ results.Accuracy = cell2mat({results_tmp.Accuracy});
 results.WeightedFscore = cell2mat({results_tmp.WeightedFscore});
 if svm_par.weights
     results.Weights =  cat(1,results_tmp(:).Weights)';
-    results.WeightsPatterns =  cell2mat({results_tmp.WeightPatterns});
+    results.WeightPatterns =  cell2mat({results_tmp.WeightPatterns});
+    results.WeightPatternsNorm =  cell2mat({results_tmp.WeightPatternsNorm});
+    if dec_args.window_length>1
+        results.Weights = reshape(results.Weights, size(train_data,1), dec_args.window_length, size(results.Weights,2));
+        results.Weights = squeeze(mean(results.Weights,2));
+        results.WeightPatterns = reshape(results.WeightPatterns, size(train_data,1), dec_args.window_length, size(results.WeightPatterns,2));
+        results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
 end
 results.Confusion = cat(3,results_tmp(:).Confusion);
 results.Sensitivity = cell2mat({results_tmp(:).Sensitivity});

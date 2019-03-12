@@ -15,11 +15,11 @@ function [ ] = plot_sensor_results(results, neighbours, varargin)
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
 
-dec_args = decoding_args;
+dec_args = args.decoding_args;
 dec_args.window_length = 0.05; %just this one different than default
 list = fieldnames(dec_args);
 p = inputParser;
-for i = 1:length(properties(decoding_args))
+for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
 addParameter(p, 'colorlim', [40 100]);

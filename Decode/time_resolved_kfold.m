@@ -194,8 +194,7 @@ for icv = 1: svm_par.iterate_cv
             sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5; %average over time and get inverse
             for t = 1:size(data,2) %now apply to training and test data
                 data(:,t,cv_train(:,ii)) = (squeeze(data(:,t,cv_train(:,ii)))'*sigma_inv)';
-                data(:,t,cv_test(:,ii)) = (squeeze(data(:,t,cv_test(:,ii)))'*sigma_inv)';
-                
+                data(:,t,cv_test(:,ii)) = (squeeze(data(:,t,cv_test(:,ii)))'*sigma_inv)';              
             end
         end
         
@@ -261,6 +260,14 @@ for icv = 1: svm_par.iterate_cv
             results.Weights(:,t) = svm_model.w;
             results.WeightPatterns(:,t) = abs(cov(kdata_)*results.Weights(:,t)/cov(kdata_*results.Weights(:,t)));
         end
+        
+        if dec_args.window_length~=1
+            results.Weights = reshape(results.Weights, size(data,1), dec_args.window_length, size(results.Weights,2));
+            results.Weights = squeeze(mean(results.Weights,2));
+            results.WeightPatterns = reshape(results.WeightPatterns, size(data,1), dec_args.window_length, size(results.WeightPatterns,2));
+            results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
+        end
+        
         results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns(:)))/(max(results.WeightPatterns(:))-min(results.WeightPatterns(:)));
     end
     
