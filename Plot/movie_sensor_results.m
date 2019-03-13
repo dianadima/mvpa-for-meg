@@ -17,11 +17,11 @@ if isempty(neighbours)
     load([ftdir '/template/neighbours/ctf275_neighb.mat']);
 end;
 
-dec_args = decoding_args;
+dec_args = args.decoding_args;
 dec_args.decoding_window = []; %replace default
 list = fieldnames(dec_args);
 p = inputParser;
-for i = 1:length(properties(decoding_args))
+for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
 end;
 addParameter(p, 'configuration', 'CTF275');
@@ -35,8 +35,8 @@ dec_args = p.Results;
 %create time axis
 if ~isempty(dec_args.time)
     time = dec_args.time;
-elseif isfield(neighbours, 'time')
-    time = neighbours.time;
+elseif isfield(neighbours, 'time') && ismember(length(neighbours(1).time), [size(results,2), size(results,3)])
+    time = neighbours(1).time;
 else
     if ismatrix(results)
         time = 1:size(results,2);

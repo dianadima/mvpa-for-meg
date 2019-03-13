@@ -7,11 +7,12 @@ function [ ] = plot_sensor_results(results, neighbours, varargin)
 %   'configuration' (default 'CTF275'): specify configuration of sensors. The fieldtrip layout <configuration>.lay will be loaded for plotting.
 %   'colorlim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
-%   'highlight_channels', significant channels can be marked with white asterisks. Cell array of strings (e.g., {'MRO18', 'MRO19'}.
-%   'time', time axis, if you wish to specify time units, rather than sampled points.
-%   'decoding_window', which portion of the data is being plotted.
-%   'window_length', what size time window is included in one plot. This may lead to multiple plots. With a decoding window of [0 1] and a
+%   'highlight_channels'(default []), significant channels can be marked with white asterisks. Cell array of strings (e.g., {'MRO18', 'MRO19'}.
+%   'time'(default []), time axis, if you wish to specify time units, rather than sampled points.
+%   'decoding_window' (default all), which portion of the data is being plotted.
+%   'window_length'(default 0.05), what size time window is included in one plot. This may lead to multiple plots. With a decoding window of [0 1] and a
 %                   window length of 0.5, you will get two plots showing 50 ms each (time axis will become 0:0.5:1).
+%   'time_label' (default true), add a time window label to each topoplot
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
 
@@ -26,14 +27,15 @@ addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'highlight_channels', []);
 addParameter(p, 'configuration', 'CTF275');
+addParameter(p, 'time_label', true);
 parse(p, varargin{:});
 dec_args = p.Results;
 
 %create time axis
 if ~isempty(dec_args.time)
     time = dec_args.time;
-elseif isfield(neighbours, 'time')
-    time = neighbours.time;
+elseif isfield(neighbours, 'time') && ismember(length(neighbours(1).time), [size(results,2), size(results,3)])
+    time = neighbours(1).time;
 else
     if ismatrix(results)
         time = 1:size(results,2);
@@ -87,7 +89,12 @@ cfg.zlim = dec_args.colorlim;
 cfg.layout = [dec_args.configuration '.lay'];
 cfg.parameter = 'acc';
 cfg.style = 'straight';
-cfg.comment = 'no';
+if dec_args.time_label
+    cfg.comment = 'xlim';
+    cfg.commentpos = 'title';
+else
+    cfg.comment = 'no';
+end
 cfg.interactive = 'no';
 cfg.colormap = dec_args.colormap;
 if ~isempty(dec_args.highlight_channels)

@@ -7,9 +7,7 @@ function [ newdata, newlabels ] = create_pseudotrials( data, labels, n_trials, n
 %       n_trials = number of trials to average together (e.g., 5).
 %       n_perm = number of times to repeat the averaging with random assignment of trials to subgroups.
 %                 If n_perm > 1, output will contain permutations x data x trials.
-% If number of permutations is >1, it returns data (features x trials x
-% permutations) and labels (trials x permutations). Otherwise returns data
-% (features x trials) and labels (trials column vector).
+% Regardless of the number of permutations, it returns data (features in original n dimensions x pseudotrials) and labels (pseudotrials x 1 vector). 
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
 
@@ -89,5 +87,11 @@ newdata = permute(newdata, newsz); %trials are last dim
 %newdata = squeeze(newdata); %one permutation case
 newlabels = cat(2,newlabels{:});
 
+%reshape so as to revert to original dimensions, with pseudotrials as last dimension
+%UNCOMMENT THIS to keep trials from each permutation separate
+if ndims(newdata)>3
+    newdata = reshape(newdata, size(newdata,1), size(newdata,2), size(newdata,3)*size(newdata,4));
+    newlabels = reshape(newlabels, size(newlabels,1)*size(newlabels,2),1);
+end;
 
 end

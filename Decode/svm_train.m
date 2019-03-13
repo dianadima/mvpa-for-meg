@@ -29,6 +29,10 @@ if abs(nargin)<2
     error('Data and labels are needed as inputs.')
 end;
 
+if ~isa(train_data, 'double')
+    train_data = double(train_data);
+end;
+
 %scale values using range and minimum of training set
 if svm_par.standardize
     train_data = (train_data - repmat(min(train_data, [], 1), size(train_data, 1), 1)) ./ repmat(max(train_data, [], 1) - min(train_data, [], 1), size(train_data, 1), 1);

@@ -152,10 +152,6 @@ for icv = 1: svm_par.iterate_cv
        
         for ii = 1:dec_args.kfold
             [ps_data, ps_labels] = create_pseudotrials(data(:,:,cv_test(:,ii)), labels(cv_test(:,ii)), dec_args.pseudo(1), dec_args.pseudo(2));
-            if ndims(ps_data)>3
-                ps_data = reshape(ps_data, size(ps_data,1), size(ps_data,2), size(ps_data,3)*size(ps_data,4));
-                ps_labels = reshape(ps_labels, size(ps_labels,1)*size(ps_labels,2),1);
-            end;
             all_data{ii} = ps_data; all_labels{ii} = ps_labels;
             if ii==1
                 cv_test_tmp(1:length(ps_labels) ,ii) = 1;

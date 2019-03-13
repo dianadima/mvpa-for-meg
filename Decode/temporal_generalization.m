@@ -43,6 +43,10 @@ dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'sensor_idx', 'pseudo', 'test_idx', 'train_idx','mnn'}); %converted struct will be fed into decoding function
 clear p;
 
+if ~isa(data, 'double')
+    data = double(data);
+end;
+
 %get channel indices and time axis. Numerical channel indices take priority
 if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
     chan_idx = dec_args.channels;
@@ -66,7 +70,7 @@ end
 if ~isempty(dec_args.time)
     time = dec_args.time;
 elseif ~isempty(dec_args.sensor_idx) && isfield(sensor_idx, 'time')
-    time = sensor_idx.time;
+    time = sensor_idx(1).time;
 else
     time = 1:size(data,2);
 end
@@ -113,16 +117,7 @@ if ~isempty(dec_args.pseudo)
     
     fprintf('\nCreating pseudotrials....\r');
     [train_data, train_labels] = create_pseudotrials(data(chan_idx,:,train_idx), labels(train_idx), dec_args.pseudo(1), dec_args.pseudo(2));
-    if ndims(train_data)>3
-        train_data = reshape(train_data, size(train_data,1), size(train_data,2), size(train_data,3)*size(train_data,4));
-        train_labels = reshape(train_labels, size(train_labels,1)*size(train_labels,2),1);
-    end;
     [test_data, test_labels] = create_pseudotrials(data(chan_idx,:,test_idx), labels(test_idx), dec_args.pseudo(1), dec_args.pseudo(2));
-    if ndims(test_data)>3
-        test_data = reshape(test_data, size(test_data,1), size(test_data,2), size(test_data,3)*size(test_data,4));
-        test_labels = reshape(test_labels, size(test_labels,1)*size(test_labels,2),1);
-    end;
-
     clear data labels;
 else
     train_data = data(:,:,train_idx);

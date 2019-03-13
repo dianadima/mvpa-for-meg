@@ -55,7 +55,7 @@ end;
 if ~isempty(dec_args.time)
     time = dec_args.time;
 elseif isfield(cluster_idx, 'time')
-    time = cluster_idx.time;
+    time = cluster_idx(1).time;
 else
     time = 1:size(train_data,2);
 end;
@@ -88,22 +88,15 @@ if size(train_data,2)<lims(2)
     lims(2) = size(train_data,2);
 end;
 
-%create pseudo-trials if requested
+%create pseudo-trials if requested - separately for training & test data
 if ~isempty(dec_args.pseudo)
-    data_tmp = cat(3,train_data,test_data);
-    labels_tmp = [train_labels;test_labels];
-    [data,labels] = create_pseudotrials(data_tmp, labels_tmp, dec_args.pseudo(1), dec_args.pseudo(2));
-    data = cat(3,data{:}); labels = cat(1,labels{:});
-    train_data = data(:,:,1:length(train_labels)); 
-    train_labels = labels(1:length(train_labels));
-    test_data = data(:,:,(length(train_labels)+1):(length(train_labels)+length(test_labels)));
-    test_labels = labels(length(train_labels)+1):(length(train_labels)+length(test_labels));
-    clear data labels data_tmp labels_tmp;
+    [train_data,train_labels] = create_pseudotrials(train_data, train_labels, dec_args.pseudo(1), dec_args.pseudo(2));
+    [test_data,test_labels] = create_pseudotrials(test_data, test_labels, dec_args.pseudo(1), dec_args.pseudo(2));
 end
 
 %whiten data if requested
 if dec_args.mnn
-    [train_data,train_labels,test_data,test_labels ] = whiten_data(train_data,train_labels,test_data,test_labels);
+    [train_data,test_data] = whiten_data(train_data,train_labels,test_data);
 end
 
 accuracy = zeros(length(chan_idx), length(lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1));
