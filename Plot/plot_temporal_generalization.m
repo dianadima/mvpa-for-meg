@@ -1,8 +1,7 @@
 function plot_temporal_generalization(results, varargin)
-% Plots results of sensor-space searchlight decoding.
-% Inputs: results: matrix of accuracy/decoding performance. Must be channels, channels x time, or subjects x channels x time.
-%         Note that if you specify a 'window_length'>1, accuracy will be averaged over the time window (because it uses ft_topoplotER). 
-%         neighbours: sensor grouping structure obtained using get_sensor_info (i.e., fieldtrip function prepare_neighbours).
+% Plots results of temporal generalization decoding.
+% Inputs: results: matrix of accuracy/decoding performance. Must be time x time, or subjects x time x time.
+%
 % Optional inputs:
 %   'time'(default []), time axis, if you wish to specify time units, rather than sampled points.
 %   'mask', binary mask (significant = 1). Significant clusters will be marked with white contours  
@@ -43,7 +42,7 @@ elseif ndims(results)==3
     acc = squeeze(mean(results,1));
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
-    error('Results should be a 2d or 3d matrix containing subjects x channels x time');
+    error('Results should be a 2d or 3d matrix containing subjects x time x time');
 end;
 
 %have 6 ticklabels for readability
