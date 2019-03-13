@@ -108,6 +108,6 @@ vid_obj = VideoWriter(output_file);
 vid_obj.FrameRate=2;
 open(vid_obj);
 writeVideo(vid_obj,F)
-
+close
 end
 

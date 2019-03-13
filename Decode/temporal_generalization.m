@@ -20,6 +20,7 @@ function [ results, train_idx, test_idx ] = temporal_generalization( data, label
 %           weights = false; --> calculate weights (by retraining model on whole dataset)
 %
 % Outputs: time x time accuracy matrix, train_idx and test_idx (we are using a split-half hold-out approach for speed and the indices are saved)
+%          training time on y-axis (rows), test time on x-axis (columns)
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
 
