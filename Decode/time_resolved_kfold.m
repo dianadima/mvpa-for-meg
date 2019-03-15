@@ -226,46 +226,52 @@ for icv = 1: svm_par.iterate_cv
         end
     end
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
-    results.PredictedLabels = allscore;
+    results.PredictedLabels(icv,:,:) = allscore;
     if ~isempty(dec_args.pseudo)
-        results.PseudoLabels = labels;
+        results.PseudoLabels(icv,:) = labels;
     end
     
-    
-    %calculate weights and compute activation patterns as per Haufe (2014)
-    if svm_par.weights
-        if dec_args.mnn
-            class1 = labels==class_id(1); class2 = labels==class_id(2); %this needs to be done separately for each condition
-            sigma_time = zeros(2,size(data,2), size(data,1), size(data,1));
-            for t = 1:size(data,2)
-                sigma_time(1,t,:,:) = cov1para(squeeze(data(:,t,class1))');
-                sigma_time(2,t,:,:) = cov1para(squeeze(data(:,t,class2))');
-            end
-            sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
-            sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
-            for t = 1:size(data,2)
-                data(:,t,:) = (squeeze(data(:,t,:))'*sigma_inv)';
-            end
+end   
+
+%remove singletons
+results.AccuracyFold = squeeze(results.AccuracyFold);
+results.cv_indices = squeeze(results.cv_indices);
+results.PredictedLabels = squeeze(results.PredictedLabels);
+
+%calculate weights and compute activation patterns as per Haufe (2014)
+if svm_par.weights
+    if dec_args.mnn
+        class1 = labels==class_id(1); class2 = labels==class_id(2); %this needs to be done separately for each condition
+        sigma_time = zeros(2,size(data,2), size(data,1), size(data,1));
+        for t = 1:size(data,2)
+            sigma_time(1,t,:,:) = cov1para(squeeze(data(:,t,class1))');
+            sigma_time(2,t,:,:) = cov1para(squeeze(data(:,t,class2))');
         end
-        for t = 1:length(tp)
-            kdata = reshape(data(:,tp(t):tp(t)+dec_args.window_length-1,:), size(data,1)*dec_args.window_length, size(data,3))'; %select time point or time window
-            if svm_par.standardize
-                kdata_ = (kdata - repmat(min(kdata, [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata, [], 1) - min(kdata, [], 1), size(kdata, 1), 1);
-            end
-            svm_model = train(labels, sparse(kdata_), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint));
-            results.Weights(:,t) = svm_model.w;
-            results.WeightPatterns(:,t) = abs(cov(kdata_)*results.Weights(:,t)/cov(kdata_*results.Weights(:,t)));
+        sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
+        sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
+        for t = 1:size(data,2)
+            data(:,t,:) = (squeeze(data(:,t,:))'*sigma_inv)';
         end
-        
-        if dec_args.window_length~=1
-            results.Weights = reshape(results.Weights, size(data,1), dec_args.window_length, size(results.Weights,2));
-            results.Weights = squeeze(mean(results.Weights,2));
-            results.WeightPatterns = reshape(results.WeightPatterns, size(data,1), dec_args.window_length, size(results.WeightPatterns,2));
-            results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
-        end
-        
-        results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns(:)))/(max(results.WeightPatterns(:))-min(results.WeightPatterns(:)));
     end
+    for t = 1:length(tp)
+        kdata = reshape(data(:,tp(t):tp(t)+dec_args.window_length-1,:), size(data,1)*dec_args.window_length, size(data,3))'; %select time point or time window
+        if svm_par.standardize
+            kdata_ = (kdata - repmat(min(kdata, [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata, [], 1) - min(kdata, [], 1), size(kdata, 1), 1);
+        end
+        svm_model = train(labels, sparse(kdata_), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint));
+        results.Weights(:,t) = svm_model.w;
+        results.WeightPatterns(:,t) = abs(cov(kdata_)*results.Weights(:,t)/cov(kdata_*results.Weights(:,t)));
+    end
+    
+    if dec_args.window_length~=1
+        results.Weights = reshape(results.Weights, size(data,1), dec_args.window_length, size(results.Weights,2));
+        results.Weights = squeeze(mean(results.Weights,2));
+        results.WeightPatterns = reshape(results.WeightPatterns, size(data,1), dec_args.window_length, size(results.WeightPatterns,2));
+        results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
+    end
+    
+    results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns(:)))/(max(results.WeightPatterns(:))-min(results.WeightPatterns(:)));
+end
     
     
 end

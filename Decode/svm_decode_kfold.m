@@ -23,18 +23,18 @@ list = fieldnames(svm_par);
 p = inputParser;
 for ii = 1:length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
-end;
+end
 parse(p, varargin{:});
 svm_par = p.Results;
-clear p;
+clear p
 
 if abs(nargin)<2 
     error('Data and labels are needed as inputs.')
-end;
+end
 
 if ~isa(data, 'double')
     data = double(data);
-end;
+end
 
 results = struct;
 
@@ -80,7 +80,7 @@ for icv = 1: svm_par.iterate_cv
         svm_model = train(labels(cv_train(:,ii)), sparse(data(cv_train(:,ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
         [allscore(cv_test(:,ii)), accuracy(:,ii), ~] = predict(labels(cv_test(:,ii)), sparse(data(cv_test(:,ii),:)), svm_model, '-q 1');
         
-    end;
+    end
 
     results.Accuracy(icv) = mean(accuracy(1,:));
     results.AccuracyMSError(icv) = mean(accuracy(2,:));
@@ -95,7 +95,7 @@ for icv = 1: svm_par.iterate_cv
     results.WeightedFscore(icv) = ((sum(results.Confusion{icv}(:,1))/sum(results.Confusion{icv}(:)))*results.Fscore1(icv)) + ((sum(results.Confusion{icv}(:,2))/sum(results.Confusion{icv}(:)))*results.Fscore2(icv));
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
     results.PredictedLabels = allscore;
-end;
+end
 
 %calculate weights and compute activation patterns as per Haufe (2014)
 if svm_par.weights
@@ -104,7 +104,7 @@ if svm_par.weights
     results.Weights = svm_model.w;
     results.WeightPatterns = abs(cov(data)*results.Weights'/cov(data*results.Weights'));
     results.WeightPatternsNorm = (results.WeightPatterns-min(results.WeightPatterns))/(max(results.WeightPatterns)-min(results.WeightPatterns));
-end;
+end
 
 
 end
