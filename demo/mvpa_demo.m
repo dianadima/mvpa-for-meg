@@ -41,24 +41,6 @@ plot_time_results(sens_result2.Accuracy, sem2,'time',time,'smooth',5, 'legend', 
 if ~exist('figures',dir), mkdir('figures'); end
 saveas(gcf, fullfile('figures','time-resolved-accuracy.png'))
 
-%% temporal generalization
-
-tg_accuracy1 = temporal_generalization(data,labels,'mnn',false, 'decoding_window', [-0.1 1], 'time', neighbours(1).time); %temporal generalization without MNN/averaging
-tg_accuracy2 = temporal_generalization(data,labels,'mnn',true,'pseudo', [3 100], 'decoding_window', [-0.1 1], 'time', neighbours(1).time); %with MNN/averaging
-save(fullfile('results','tg_accuracy.mat'),'tg_accuracy*')
-
-%we'll highlight clusters (size>=5) with accuracies over 85 
-mask1 = logical(tg_accuracy1>85); %create mask
-mask2 = logical(tg_accuracy2>85);
-
-colorlim = [min(min([tg_accuracy1;tg_accuracy2])) max(max([tg_accuracy1;tg_accuracy2]))]; %common color axis
-
-figure('color','w')
-subplot(1,2,1)
-plot_temporal_generalization(tg_accuracy1,'time',dec_time, 'mask',mask1, 'clustersize',5,'colormap', 'parula','colorbar_label',[],'colorlim', colorlim, 'title', 'No MNN/Ave')
-subplot(1,2,2)
-plot_temporal_generalization(tg_accuracy2,'time',dec_time, 'mask',mask2, 'clustersize',5,'colormap', 'parula','colorlim', colorlim, 'title', 'MNN + Ave')
-saveas(gcf, fullfile('figures','tg-accuracy.png'))
 
 %% plotting patterns based on classifier weights (cf. Haufe et al, 2014)
 
@@ -77,6 +59,25 @@ saveas(gcf, fullfile('figures','average-weights.png'))
 plot_sensor_results(sens_result2.WeightPatternsNorm, neighbours, 'time', time, 'window_length', 0.1, 'colorlim', [0 1], 'colormap', 'parula')
 saveas(gcf, fullfile('figures','weights2.png'))
 movie_sensor_results(sens_result2.WeightPatternsNorm, neighbours, fullfile('figures','weights2.avi'), 'colorlim', [0 1], 'colormap', 'parula', 'result_type', 'Weight patterns')
+
+%% temporal generalization
+
+tg_accuracy1 = temporal_generalization(data,labels,'mnn',false, 'decoding_window', [-0.1 1], 'time', neighbours(1).time); %temporal generalization without MNN/averaging
+tg_accuracy2 = temporal_generalization(data,labels,'mnn',true,'pseudo', [3 100], 'decoding_window', [-0.1 1], 'time', neighbours(1).time); %with MNN/averaging
+save(fullfile('results','tg_accuracy.mat'),'tg_accuracy*')
+
+%we'll highlight clusters (size>=5) with accuracies over 85 
+mask1 = logical(tg_accuracy1>85); %create mask
+mask2 = logical(tg_accuracy2>85);
+
+colorlim = [min(min([tg_accuracy1;tg_accuracy2])) max(max([tg_accuracy1;tg_accuracy2]))]; %common color axis
+
+figure('color','w')
+subplot(1,2,1)
+plot_temporal_generalization(tg_accuracy1,'time',dec_time, 'mask',mask1, 'clustersize',5,'colormap', 'parula','colorbar_label',[],'colorlim', colorlim, 'title', 'No MNN/Ave')
+subplot(1,2,2)
+plot_temporal_generalization(tg_accuracy2,'time',dec_time, 'mask',mask2, 'clustersize',5,'colormap', 'parula','colorlim', colorlim, 'title', 'MNN + Ave')
+saveas(gcf, fullfile('figures','tg-accuracy.png'))
 
 %% searchlight decoding
 
