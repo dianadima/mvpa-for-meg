@@ -10,7 +10,7 @@ function [] = movie_source_results( accuracy, source_idx, output_file, varargin 
 %   'colorlim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
 %   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
-%   'style' (default 'searchlight'), can be 'searchlight' or 'centroid' - value assigned to cluster of neighbouring sources or only centroid
+%   'style' (default 'centroid'), can be 'searchlight' or 'centroid' - value assigned to cluster of neighbouring sources or only centroid
 %   'roi' (default []), region of interest (AAL label)
 %   'framerate' (default 2)
 %   'view' (default [0 90]), default from above
@@ -31,7 +31,7 @@ addParameter(p, 'roi', []);
 addParameter(p, 'view', [0 90]); %view - default = from above
 addParameter(p, 'result_type', 'Accuracy (%)');
 addParameter(p, 'framerate', 2);
-addParameter(p, 'style', 'searchlight');
+addParameter(p, 'style', 'centroid');
 parse(p, varargin{:});
 
 if ismatrix(accuracy)

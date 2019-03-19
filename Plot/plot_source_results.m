@@ -12,7 +12,7 @@ function [ ] = plot_source_results( accuracy, varargin )
 %         'roi', default [], mask all ROIs except this (AAL ROI string)
 %         'inflated', default true - inflated surface or regular
 %         'hemisphere', default 'both' (can be 'right', 'left', or 'both')
-%         'style', default 'searchlight' (can be 'searchlight' or 'centroid')
+%         'style', default 'centroid' (can be 'searchlight' or 'centroid')
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
 
@@ -29,7 +29,7 @@ addParameter(p, 'inflated', true);
 addParameter(p, 'roi', []);
 addParameter(p, 'hemisphere', 'both');
 addParameter(p, 'view', [0 90]);
-addParameter(p, 'style', 'searchlight');
+addParameter(p, 'style', 'centroid');
 parse(p, varargin{:});
 
 if size(accuracy,1)>1 && size(accuracy,2)>1

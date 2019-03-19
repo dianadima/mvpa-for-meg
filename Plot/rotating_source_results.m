@@ -9,7 +9,7 @@ function [] = rotating_source_results( accuracy, source_idx, output_file, vararg
 %   'colorlim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
 %   'result_type' (default 'Accuracy (%)'): will be plotted as colorbar axis
-%   'style' (default 'searchlight'), can be 'searchlight' or 'centroid' - value assigned to cluster of neighbouring sources or only centroid
+%   'style' (default 'centroid'), can be 'searchlight' or 'centroid' - value assigned to cluster of neighbouring sources or only centroid
 %   'roi' (default []), region of interest (AAL label)
 %   'framerate' (default 10)
 %   'view' (default [0 90]), default from above
@@ -29,7 +29,7 @@ addParameter(p, 'hemisphere', 'both');
 addParameter(p, 'roi', []);
 addParameter(p, 'result_type', 'Accuracy (%)');
 addParameter(p, 'framerate', 10);
-addParameter(p, 'style', 'searchlight');
+addParameter(p, 'style', 'centroid');
 parse(p, varargin{:});
 
 if size(accuracy,1)>1 && size(accuracy,2)>1

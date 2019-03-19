@@ -13,5 +13,5 @@ addpath(fullfile(toolbox_path, 'Plot'));
 addpath(fullfile(toolbox_path, 'Stats')); 
 addpath(fullfile(toolbox_path, 'RSA'));
 
-%subfolders contained less recommended versions of scripts - run them by
+%subfolders contain less recommended versions of scripts - run them by
 %navigating to the subfolders.
