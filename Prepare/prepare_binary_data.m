@@ -23,7 +23,12 @@ if ischar(data1) && ischar(data2)
     load(data2, var);
     eval(sprintf('data2 = %s;',var));
     
-end;
+end
+
+if isstruct(data1) && isstruct(data2) %Fieldtrip
+    data1 = cat(3, data1.trial{:});
+    data2 = cat(3, data2.trial{:});
+end
 
 if ndims(data1) ~= ndims(data2)
     error('Both datasets need to have the same number of dimensions.')
