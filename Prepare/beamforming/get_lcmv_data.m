@@ -14,6 +14,7 @@ function [ virtualdata ] = get_lcmv_data( dataset, mri_file, marker, varargin )
 %        fixedori = true;
 %        plot = 0;
 %        mnn = false; (multivariate noise normalization - Work In Progress)
+%        sourcemodel = 'standard_sourcemodel3d10mm'
 %
 %DC Dima 2017 (diana.c.dima@gmail.com)
 
@@ -110,8 +111,11 @@ hdm = ft_prepare_headmodel(cfg, seg); %headmodel based on segmented mri
 hdm = ft_convert_units(hdm, 'mm');%this is in mm
 
 % get template source model so that individual grids align to MNI
-load('/cubric/software/MEG/fieldtrip-20161011/template/sourcemodel/standard_sourcemodel3d10mm');
-grid = ft_convert_units(sourcemodel, 'mm'); %#ok<NODEF>
+sourcemodel_filename = p.Results.sourcemodel;
+sourcemodel_path = fullfile(ft_path,'template','sourcemodel',sourcemodel_filename);
+sourcemodel = load(sourcemodel_path);
+grid = ft_convert_units(sourcemodel.sourcemodel, 'mm'); 
+clear sourcemodel*
 
 %create sourcemodel by warping individual grid to template grid
 cfg = [];

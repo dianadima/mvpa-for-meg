@@ -16,6 +16,7 @@ classdef lcmv_args
         fixedori = true;
         plot = 0;
         mnn = false;
+        sourcemodel = 'standard_sourcemodel3d10mm';
         
     end
     
@@ -34,6 +35,7 @@ classdef lcmv_args
                 obj.fixedori = varargin{8};
                 obj.plot = varargin{9};
                 obj.mnn = varargin{10};
+                obj.sourcemodel = varargin{11};
             end;
             
         end
