@@ -37,6 +37,8 @@ else
     trialfun1 = p.Results.trialfun; trialfun2 = trialfun1;
 end;
 
+[~,ft_path] = ft_version;
+
 %% read in mri
 
 [~,~,mritype] = fileparts(mri_file);

@@ -29,6 +29,8 @@ addParameter(p,'toilim', [0.5 0.7]);
 addParameter(p,'trlidx', []);    
 parse(p, varargin{:});
 
+[~,ft_path] = ft_version;
+
 %% read in mri
 
 [~,~,mritype] = fileparts(mri_file);

@@ -30,6 +30,8 @@ addParameter(p,'trlidx', []);
 parse(p, varargin{:});
 trialfun = p.Results.trialfun;
 
+[~,ft_path] = ft_version;
+
 %% read in mri
 
 [~,~,mritype] = fileparts(mri_file);
