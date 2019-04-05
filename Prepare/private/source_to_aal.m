@@ -29,11 +29,7 @@ roi_idx = cell(1,90);
 
 for i = 1:90                                %loop through ROIs
     indx = find(sourcemodel2.tissue==i);
-    roi_idx{i} = zeros(1,length(indx));
-    
-    for j = 1:length(indx)
-        roi_idx{i}(j) = find(inside==indx(j)); %store indices
-    end
+    roi_idx{i} = find(ismember(inside,indx));
 end
 
 labels = sourcemodel2.tissuelabel(1:90);
