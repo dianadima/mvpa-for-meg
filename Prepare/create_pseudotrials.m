@@ -31,10 +31,10 @@ else
             trlsize(i) = floor(length(find(labels==classes(i)))/n_trials);
         else
             trlsize(i) = length(idx{i,1});
-        end;
-    end;
+        end
+    end
     trlsize = sum(trlsize);
-end;
+end
 
 newsz = [n_perm trlsize sz(2:end)];
 newdata = zeros(newsz);
@@ -63,23 +63,23 @@ for p = 1:n_perm
                 pseudo = squeeze(nanmean(pseudo,1));
                 avedata(t,:) = pseudo(:);
                 
-            end;
+            end
             
         else
             
             avedata = tmpdata;
             
-        end;
+        end
         
         condata = cat(1, condata, avedata);
                 
         newlabels{p} = [newlabels{p}; c*ones(size(avedata,1),1)]; 
     
-    end;
+    end
     
     newdata(p,:,idx{1,2:end}) = condata;
     
-end;
+end
 
 %reshape into data*pseudotrials (over permutations)
 newsz = 1:length(newsz); newsz(length(newsz)+1) = 2; newsz(length(newsz)+1) = 1; newsz(1:2)=[]; 
@@ -92,6 +92,6 @@ newlabels = cat(2,newlabels{:});
 if ndims(newdata)>3
     newdata = reshape(newdata, size(newdata,1), size(newdata,2), size(newdata,3)*size(newdata,4));
     newlabels = reshape(newlabels, size(newlabels,1)*size(newlabels,2),1);
-end;
+end
 
 end

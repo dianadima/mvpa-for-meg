@@ -111,9 +111,14 @@ if isa(cv,'cvpartition')
 else
     if size(cv,2)~=dec_args.kfold
         error('Crossval indices must be supplied in indices x folds matrix or logical array.');
-    end;
-    cv_train = cv;
-    cv_test = abs(cv_train-1);
+    end
+    if sum(cv(:,1))==size(cv,1)/dec_args.kfold
+        cv_test = cv;
+        cv_train = abs(cv_test-1);
+    else
+        cv_train = cv;
+        cv_test = abs(cv_train-1);
+    end
 end;
 
 cv_train = logical(cv_train); cv_test = logical(cv_test);

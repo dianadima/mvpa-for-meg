@@ -136,8 +136,14 @@ for icv = 1: svm_par.iterate_cv
         if size(cv,2)~=dec_args.kfold
             error('Crossval indices must be supplied in indices x folds matrix or logical array.');
         end
-        cv_train = cv;
-        cv_test = abs(cv_train-1);
+        %check which index is training/test just in case...
+        if sum(cv(:,1))==size(cv,1)/dec_args.kfold
+            cv_test = cv;
+            cv_train = abs(cv_test-1);
+        else
+            cv_train = cv;
+            cv_test = abs(cv_train-1);
+        end
     end
     
     cv_train = logical(cv_train); cv_test = logical(cv_test);
@@ -228,7 +234,7 @@ for icv = 1: svm_par.iterate_cv
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
     results.PredictedLabels(icv,:,:) = allscore;
     if ~isempty(dec_args.pseudo)
-        results.PseudoLabels(icv,:) = labels(:);
+        results.PseudoLabels(:,icv) = labels(:); %column vector
     end
     
 end   
