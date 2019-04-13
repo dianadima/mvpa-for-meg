@@ -228,7 +228,7 @@ for icv = 1: svm_par.iterate_cv
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
     results.PredictedLabels(icv,:,:) = allscore;
     if ~isempty(dec_args.pseudo)
-        results.PseudoLabels(icv,:) = labels;
+        results.PseudoLabels(icv,:) = labels(:);
     end
     
 end   

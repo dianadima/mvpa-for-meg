@@ -28,14 +28,14 @@ p = inputParser;
 
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
-end;
+end
 for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
-end;
+end
 
 if size(train_data,1)~=size(test_data,1) || size(train_data,2)~=size(test_data,2)
     error('Training and test data need to have equal numbers of features')
-end;
+end
 
 parse(p, varargin{:});
 dec_args = p.Results;
@@ -47,12 +47,12 @@ if ~isempty(dec_args.time)
     time = dec_args.time;
 else
     time = 1:size(train_data,2);
-end;
+end
 
 if length(time)~=size(train_data,2)
     time = 1:size(train_data,2);
     fprintf('Warning: time axis does not match dataset size. Replacing with default time axis...');
-end;
+end
 
 %time limits for decoding window
 if ~isempty(dec_args.decoding_window)
@@ -61,21 +61,21 @@ if ~isempty(dec_args.decoding_window)
     else
         fprintf('\nWarning: starting timepoint not found, starting from beginning of data...\n');
         lims(1) = 1;
-    end;
+    end
     if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
         lims(2) = find(round(time,3)==dec_args.decoding_window(2));
     else
         fprintf('\nWarning: end timepoint not found, decoding until end of data...\n');
         lims(2) = size(train_data,2);
-    end;
+    end
         
 else
     lims = [1 size(train_data,2)];
-end;
+end
 
 if size(train_data,2)<lims(2)
     lims(2) = size(train_data,2);
-end;
+end
 
 %create pseudo-trials if requested
 if ~isempty(dec_args.pseudo)
@@ -104,13 +104,14 @@ if svm_par.weights
         results.Weights = squeeze(mean(results.Weights,2));
         results.WeightPatterns = reshape(results.WeightPatterns, size(train_data,1), dec_args.window_length, size(results.WeightPatterns,2));
         results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
+    end
 end
 results.Confusion = cat(3,results_tmp(:).Confusion);
 results.Sensitivity = cell2mat({results_tmp(:).Sensitivity});
 results.Specificity = cell2mat({results_tmp(:).Specificity});
 results.PredictedLabels = cell2mat({results_tmp(:).PredictedLabels});
 if ~isempty(dec_args.pseudo)
-    results.PseudoLabels = test_labels;
+    results.PseudoLabels = test_labels(:);
 end
 clear train_data_svm test_data_svm;
 
