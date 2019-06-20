@@ -19,6 +19,7 @@ addParameter(p, 'colormap', 'jet');
 addParameter(p, 'time', []);
 addParameter(p, 'mask', []);
 addParameter(p, 'clustersize',1)
+addParameter(p, 'clusters', []);
 addParameter(p, 'title', []);
 addParameter(p, 'colorbar', true);
 addParameter(p, 'colorbar_label', 'Accuracy (%)');
@@ -69,12 +70,19 @@ if opt.colorbar
 end
 hold on
 
+clusters = [];
 if ~isempty(opt.mask)
-    clusters = bwconncomp(opt.mask); %get the clusters
-    for j = 1:length(clusters.PixelIdxList)
-        if length(clusters.PixelIdxList{j})>=opt.clustersize
+    comp = bwconncomp(opt.mask); %get the clusters
+    clusters = comp.PixelIdxList;
+elseif ~isempty(opt.clusters)
+    clusters = opt.clusters;
+end
+
+if ~isempty(clusters)
+    for j = 1:length(clusters)
+        if length(clusters{j})>=opt.clustersize
             z = zeros(size(acc)); 
-            z(clusters.PixelIdxList{j}) = 1;
+            z(clusters{j}) = 1;
             [yy,xx] = find(z==1);
             k = boundary(xx,yy,1);
             plot(xx(k), yy(k), 'w', 'LineWidth', 1.5);
