@@ -83,6 +83,7 @@ for icv = 1: svm_par.iterate_cv
     results.Fscore1(icv) = (2*PP*results.Sensitivity(icv))/(PP+results.Sensitivity(icv));
     results.Fscore2(icv) = (2*NP*results.Specificity(icv))/(NP+results.Specificity(icv));
     results.WeightedFscore(icv) = ((sum(results.Confusion{icv}(:,1))/sum(results.Confusion{icv}(:)))*results.Fscore1(icv)) + ((sum(results.Confusion{icv}(:,2))/sum(results.Confusion{icv}(:)))*results.Fscore2(icv));
+    results.PosteriorProbability = post_prob;
     
     if svm_par.AUC
         [results.ROC{icv}(:,1),results.ROC{icv}(:,2),~,results.AUC(icv)] = perfcurve(labels, post_prob(:,1),'1');

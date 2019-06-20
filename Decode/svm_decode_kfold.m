@@ -11,6 +11,7 @@ function results = svm_decode_kfold (data, labels, varargin)
 % 'standardize', default true (recommended; across training set)
 % 'weights', default false (output vector of classifier weights & activation patterns associated with them cf. Haufe 2014)
 %            Note: weights are computed by retraining classifier on whole dataset
+% 'cv_indices', prespecified training set cross-val indices (cvpartition object or indices x folds matrix/logical, with 1 = training set)
 %
 % Outputs results structure with non-optional metrics: accuracy, Fscore, sensitivity, specificity. 
 % Optional (as above): weights and weight-derived patterns. (Set 'weights',true)
@@ -36,13 +37,14 @@ if ~isa(data, 'double')
     data = double(data);
 end
 
+labels = labels(:);
 results = struct;
 
 for icv = 1: svm_par.iterate_cv
 
     %cross-validation indices - convoluted but can be kept constant if need be
     if isempty(svm_par.cv_indices)
-        cv = cvpartition(labels, 'kfold', svm_par.kfold);
+        cv = cvpartition(labels, 'kfold', svm_par.kfold); %stratified by default
     else
         if iscell(svm_par.cv_indices)
             cv = svm_par.cv_indices{icv};
@@ -94,7 +96,7 @@ for icv = 1: svm_par.iterate_cv
     results.Fscore2(icv) = (2*NP*results.Specificity(icv))/(NP+results.Specificity(icv));
     results.WeightedFscore(icv) = ((sum(results.Confusion{icv}(:,1))/sum(results.Confusion{icv}(:)))*results.Fscore1(icv)) + ((sum(results.Confusion{icv}(:,2))/sum(results.Confusion{icv}(:)))*results.Fscore2(icv));
     results.cv_indices(icv,:,:) = cv_idx; %this can be reused
-    results.PredictedLabels = allscore;
+    results.PredictedLabels(:,icv) = allscore;
 end
 
 %calculate weights and compute activation patterns as per Haufe (2014)

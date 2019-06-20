@@ -15,16 +15,15 @@ addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
 parse(p, varargin{:});
 
-num_iterations = p.Results.num_iterations;
-acc_dm = accuracy-p.Results.chance_level; %demean accuracy
-rand_sign = sign(randn(num_iterations,length(acc_dm)));
-if size(acc_dm,1) == 1
-    rand_accuracy = repmat(acc_dm, num_iterations,1).*rand_sign;
-elseif size(acc_dm,2) == 1
-    rand_accuracy = repmat(acc_dm, 1, num_iterations)'.*rand_sign; %iterations x subjects
-elseif ~isvector(acc_dm)
-    error('Only vector data allowed')
+if ~isvector(accuracy)
+    error('Accuracy should be a vector.')
 end
+
+num_iterations = p.Results.num_iterations;
+acc_dm = accuracy(:)-p.Results.chance_level; %demean accuracy
+rand_sign = sign(randn(num_iterations,length(acc_dm)));
+rand_accuracy = repmat(acc_dm, 1, num_iterations)'.*rand_sign; %iterations x subjects
+
     
 switch p.Results.statistic
     

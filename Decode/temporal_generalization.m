@@ -83,26 +83,10 @@ end
 
 
 if ~isempty(dec_args.decoding_window)
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
-        lims(1) = find(round(time,3)==dec_args.decoding_window(1));
-    else
-        fprintf('Warning: starting timepoint not found, starting from beginning of data...\n');
-        lims(1) = 1;
-    end;
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
-    else
-        fprintf('Warning: end timepoint not found, decoding until end of data...\n');
-        lims(2) = size(data,2);
-    end
-        
-else
-    lims = [1 size(data,2)];
+    lims(1) = nearest(time, dec_args.decoding_window(1));
+    lims(2) = nearest(time, dec_args.decoding_window(2));
 end
 
-if size(data,2)<lims(2)
-    lims(2) = size(data,2);
-end
 
 %we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used, and indices can be provided
 if isempty (dec_args.train_idx)
@@ -138,14 +122,14 @@ results = zeros(length(train_data), length(train_data));
 
 %and here we run the classifier -first train on all time points and store the models
 svm_model = arrayfun(@(t) svm_train(train_data{t}, train_labels, svm_par), 1:length(train_data), 'UniformOutput', false);
-fprintf('\nFinished training all models...\r')  
-fprintf('\rNow testing...\r')
+fprintf('\nFinished training all models...')  
+fprintf('\nNow testing...')
 
 %testing on all time points
 for t = 1:length(svm_model)
     
-    if mod(t,50)==0
-        fprintf('\n%d out of %d...\n', t, length(svm_model))
+    if mod(t,100)==0
+        fprintf('\n%d out of %d...', t, length(svm_model))
     end;
     
     for i = 1:length(test_data)
