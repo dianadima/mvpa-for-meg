@@ -34,7 +34,7 @@ trialfun = p.Results.trialfun;
 
 %% read in mri
 
-[~,~,mritype] = fileparts(mri_file);
+mritype = mri_file(end-2:end); %better not to use fileparts as paths can vary...
 seg_mri = strrep(mri_file, mritype, 'seg.mat');
 
 if strcmp(mritype,'mat')  
@@ -49,6 +49,7 @@ if strcmp(mritype,'mat')
         mri = ft_convert_units(mri, 'mm');
         
         cfg = [];
+        cfg.output = {'brain','skull','scalp'};
         seg = ft_volumesegment(cfg, mri); %default - tissue probability map
         seg.transform = mri.transform;
         seg.anatomy = mri.anatomy;
@@ -79,11 +80,17 @@ cfg = ft_definetrial(cfg);
 
 %preprocessing options
 cfg.channel = 'MEG'; 
-cfg.bpfilter = 'yes';
-cfg.bpfreq = p.Results.bandpass;
-if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
-    cfg.bpfiltord = 3;
-end;
+if ~isempty(p.Results.bandpass)
+    cfg.bpfilter = 'yes';
+    cfg.bpfreq = p.Results.bandpass;
+    if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
+        cfg.bpfiltord = 3;
+    end
+end
+if ~isempty(p.Results.lowpass)
+    cfg.lpfilter = 'yes';
+    cfg.lpfreq = p.Results.lowpass;
+end
 data = ft_preprocessing(cfg);
 
 if ~isempty(p.Results.resamplefs)
@@ -91,7 +98,7 @@ if ~isempty(p.Results.resamplefs)
     cfg.resamplefs = p.Results.resamplefs;
     cfg.detrend = 'no';
     data = ft_resampledata(cfg,data);
-end;
+end
 
 %timelock analysis
 cfg = [];
@@ -162,7 +169,7 @@ if p.Results.fixedori
     cfg.lcmv.fixedori = 'yes';
 else
     cfg.lcmv.fixedori = 'no';
-end;
+end
 cfg.lcmv.projectnoise='yes';
 cfg.lcmv.lambda = '5%';
 source = ft_sourceanalysis(cfg, data_tl);
@@ -201,11 +208,17 @@ cfg.trialdef.prestim = p.Results.toilim(1);
 cfg.trialdef.poststim = p.Results.toilim(2);
 cfg.trlidx = p.Results.trlidx;
 cfg.channel = 'MEG';
-cfg.bpfilter = 'yes';
-cfg.bpfreq = p.Results.bandpass;
-if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
-    cfg.bpfiltord = 3;
-end;
+if ~isempty(p.Results.bandpass)
+    cfg.bpfilter = 'yes';
+    cfg.bpfreq = p.Results.bandpass;
+    if cfg.bpfreq(1)<0.5 || cfg.bpfreq(2)<10
+        cfg.bpfiltord = 3;
+    end
+end
+if ~isempty(p.Results.lowpass)
+    cfg.lpfilter = 'yes';
+    cfg.lpfreq = p.Results.lowpass;
+end
 cfg = ft_definetrial(cfg);  
 data = ft_preprocessing(cfg);
 
@@ -214,7 +227,7 @@ if ~isempty(p.Results.resamplefs)
     cfg.resamplefs = p.Results.resamplefs;
     cfg.detrend = 'no';
     data = ft_resampledata(cfg,data);
-end;
+end
 
 % for MNN, calculate error covariance and multiply with the beamformer weights
 % Note: work in progress! The beamformer suppresses noise and MNN here 
@@ -228,7 +241,7 @@ if p.Results.mnn
     end;
     sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
     clear data_;
-end;
+end
 
 virtualdata = data;
 %Create the virtual data
@@ -238,7 +251,7 @@ for j = 1 : length(data.trial)
             virtualdata.trial{j} = (filters*sigma_inv) * data.trial{j};
         else
             virtualdata.trial{j} = filters * data.trial{j};
-        end;
+        end
     else
         virtualdata.trial{j} = zeros(size(filters,1),size(data.trial{j},2),size(filters,3));
         for ori = 1:3
@@ -246,10 +259,10 @@ for j = 1 : length(data.trial)
                 virtualdata.trial{j}(:,:,ori) = (filters(:,:,ori)*sigma_inv) * data.trial{j};
             else
                 virtualdata.trial{j}(:,:,ori) = filters(:,:,ori) * data.trial{j};
-            end;
+            end
         end
-    end;
-end;
+    end
+end
 
 for j = 1 : size(virtualdata.trial{1},1)    %to keep FT happy
        virtualdata.label{j,1} = num2str(j);

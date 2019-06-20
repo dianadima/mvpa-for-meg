@@ -8,7 +8,8 @@ classdef lcmv_args
         normalize = true;
         marker = 'onset';
         trialfun = 'ft_trialfun_general';
-        bandpass = [0.1 100];
+        lowpass = 100;
+        bandpass = [];
         prestim = 0.5;
         poststim = 0.7;
         baseline = [-0.5 0];
@@ -27,15 +28,16 @@ classdef lcmv_args
             if ~isempty(varargin)
                 obj.normalize = varargin{1};
                 obj.marker = varargin{2};
-                obj.bandpass = varargin{3};
-                obj.prestim = varargin{4};
-                obj.poststim = varargin{5};
-                obj.baseline = varargin{6};
-                obj.resamplefs = varargin{7};
-                obj.fixedori = varargin{8};
-                obj.plot = varargin{9};
-                obj.mnn = varargin{10};
-                obj.sourcemodel = varargin{11};
+                obj.lowpass = varargin{3};
+                obj.bandpass = varargin{4};
+                obj.prestim = varargin{5};
+                obj.poststim = varargin{6};
+                obj.baseline = varargin{7};
+                obj.resamplefs = varargin{8};
+                obj.fixedori = varargin{9};
+                obj.plot = varargin{10};
+                obj.mnn = varargin{11};
+                obj.sourcemodel = varargin{12};
             end;
             
         end
