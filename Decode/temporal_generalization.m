@@ -83,10 +83,11 @@ end
 
 
 if ~isempty(dec_args.decoding_window)
-    lims(1) = nearest(time, dec_args.decoding_window(1));
-    lims(2) = nearest(time, dec_args.decoding_window(2));
+    lims(1) = nearest(time,dec_args.decoding_window(1));
+    lims(2) = nearest(time,dec_args.decoding_window(2));       
+else
+    lims = [1 size(data,2)];
 end
-
 
 %we use a hold-out method that trains on half and tests on the other half, for speed reasons; other methods such as nested kfold can be used, and indices can be provided
 if isempty (dec_args.train_idx)

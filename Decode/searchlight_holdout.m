@@ -13,8 +13,6 @@ function [ accuracy, Fscore] = searchlight_holdout( train_data, train_labels, te
 %           
 %          solver = 1; %only applies to liblinear: 1: L2 dual-problem; 2: L2 primal; 3:L2RL1L...
 %          boxconstraint = 1; --> C-parameter: Note, we don't have any options for optimizing this, need to write it separately if needed
-%          kfold = 5; --> number of folds for k-fold-cross-validation
-%          cv_indices = []; --> supply cross-validation indices (e.g. in cvpartition format)
 %          standardize = true; --> standardize features using mean and SD of training set (recommended)
 %          weights = false; --> calculate weights (by retraining model on whole dataset)
 %
@@ -42,14 +40,14 @@ end;
 parse(p, varargin{:});
 dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'pseudo','mnn'}); %converted struct will be fed into decoding function
-clear p;
+clear p
 
 %channel indices for each searchlight iteration
 if isstruct(cluster_idx) %the sensor-space case
     chan_idx = arrayfun(@(i) find(ismember({cluster_idx.label},[cluster_idx(i).label; cluster_idx(i).neighblabel])), 1:length(cluster_idx), 'UniformOutput', false); %store all searchlight idx in a cell array
 else
     chan_idx = cluster_idx; %the source-space case
-end;
+end
 
 %create time axis
 if ~isempty(dec_args.time)
@@ -58,31 +56,20 @@ elseif isfield(cluster_idx, 'time')
     time = cluster_idx(1).time;
 else
     time = 1:size(train_data,2);
-end;
+end
 
 if length(time)~=size(train_data,2)
     time = 1:size(train_data,2);
     fprintf('\nWarning: time axis does not match dataset size. Replacing with default time axis...');
-end;
+end
 
 %time limits for decoding window
 if ~isempty(dec_args.decoding_window)
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
-        lims(1) = find(round(time,3)==dec_args.decoding_window(1));
-    else
-        fprintf('\nWarning: starting timepoint not found, starting from beginning of data...\n');
-        lims(1) = 1;
-    end;
-    if ~isempty(find(round(time,3)==dec_args.decoding_window(2),1))
-        lims(2) = find(round(time,3)==dec_args.decoding_window(2));
-    else
-        fprintf('\nWarning: end timepoint not found, decoding until end of data...\n');
-        lims(2) = size(train_data,2);
-    end;
-        
+    lims(1) = nearest(time,dec_args.decoding_window(1));
+    lims(2) = nearest(time,dec_args.decoding_window(2));       
 else
     lims = [1 size(train_data,2)];
-end;
+end
 
 if size(train_data,2)<lims(2)
     lims(2) = size(train_data,2);
