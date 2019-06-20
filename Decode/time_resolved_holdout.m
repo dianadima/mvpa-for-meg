@@ -42,6 +42,30 @@ dec_args = p.Results;
 svm_par = rmfield(struct(dec_args), {'window_length','channels','decoding_window', 'time', 'pseudo','mnn'}); %converted struct will be fed into decoding function
 clear p;
 
+
+%get channel indices and time axis. Numerical channel indices take priority
+if ~iscell(dec_args.channels) && ~ischar(dec_args.channels)
+    chan_idx = dec_args.channels;
+end
+if ~isempty(dec_args.sensor_idx) %a neighbours structure was given
+    sensor_idx = dec_args.sensor_idx;
+    if ~exist('chan_idx', 'var') %there are no numerical indices
+        chan_idx = 1:size(data,1); %initialize with entire array
+        if ~strcmp (dec_args.channels, 'MEG') %if we need to subselect sensors
+            chan = [];
+            for i = 1:length(dec_args.channels)
+                idx = cellfun('isempty',strfind({sensor_idx.label},dec_args.channels{i}));
+                chan = [chan chan_idx(~idx)]; %#ok<AGROW>
+            end
+            chan_idx = chan;
+        end
+    end
+else
+    if ~exist('chan_idx', 'var')
+        chan_idx = 1:size(data,1);
+    end
+end
+
 %create time axis
 if ~isempty(dec_args.time)
     time = dec_args.time;
@@ -57,7 +81,9 @@ end
 %time limits for decoding window
 if ~isempty(dec_args.decoding_window)
     lims(1) = nearest(time,dec_args.decoding_window(1));
-    lims(2) = nearest(time,dec_args.decoding_window(2));
+    lims(2) = nearest(time,dec_args.decoding_window(2));       
+else
+    lims = [1 size(train_data,2)];
 end
 
 %create pseudo-trials if requested
@@ -73,8 +99,8 @@ end
 
 fprintf('\nRunning classifier... '); 
 %loop through time
-train_data_svm = arrayfun(@(i) reshape(train_data(:, i:i+dec_args.window_length-1,:), size(train_data,1)*dec_args.window_length, size(train_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %time selection
-test_data_svm = arrayfun(@(i) reshape(test_data(:, i:i+dec_args.window_length-1,:), size(test_data,1)*dec_args.window_length, size(test_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %time selection
+train_data_svm = arrayfun(@(i) reshape(train_data(chan_idx, i:i+dec_args.window_length-1,:), length(chan_idx)*dec_args.window_length, size(train_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %time selection
+test_data_svm = arrayfun(@(i) reshape(test_data(chan_idx, i:i+dec_args.window_length-1,:), length(chan_idx)*dec_args.window_length, size(test_data,3))', lims(1):dec_args.window_length:lims(2)-dec_args.window_length+1, 'UniformOutput', false); %time selection
 results_tmp = arrayfun(@(i) svm_decode_holdout(train_data_svm{i},train_labels, test_data_svm{i}, test_labels, svm_par), 1:length(train_data_svm));
 results.Accuracy = cell2mat({results_tmp.Accuracy});
 results.WeightedFscore = cell2mat({results_tmp.WeightedFscore});
@@ -83,9 +109,9 @@ if svm_par.weights
     results.WeightPatterns =  cell2mat({results_tmp.WeightPatterns});
     results.WeightPatternsNorm =  cell2mat({results_tmp.WeightPatternsNorm});
     if dec_args.window_length>1
-        results.Weights = reshape(results.Weights, size(train_data,1), dec_args.window_length, size(results.Weights,2));
+        results.Weights = reshape(results.Weights, length(chan_idx), dec_args.window_length, size(results.Weights,2));
         results.Weights = squeeze(mean(results.Weights,2));
-        results.WeightPatterns = reshape(results.WeightPatterns, size(train_data,1), dec_args.window_length, size(results.WeightPatterns,2));
+        results.WeightPatterns = reshape(results.WeightPatterns, length(chan_idx), dec_args.window_length, size(results.WeightPatterns,2));
         results.WeightPatterns = squeeze(mean(results.WeightPatterns,2));
     end
 end
