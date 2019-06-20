@@ -89,8 +89,8 @@ switch(opt.method)
         
         %look for positive clusters in observed and random data: one-tailed
         prc = 100* (1 - opt.clusteralpha); %get cluster-setting percentile
-        obs_map = double(obs_stat>=prctile(obs_stat(:),prc));
-        r_map = double(r_stat>=prctile(obs_stat(:),prc)); %ones for values that should go in the clusters
+        obs_map = double(obs_stat>=prctile(r_stat(:),prc)); %note - percentile based on H0 distribution, o/w junk!
+        r_map = double(r_stat>=prctile(r_stat(:),prc)); %ones for values that should go in the clusters
         max_r_cls = zeros(1,opt.num_iterations); %maximal cluster distribution, only maxsize for now
         
         %include channel, source (grid) data, and time by time cases
@@ -152,8 +152,8 @@ switch(opt.method)
                 
                 
             else
-                
-                %here we are simply looking for clusters w/o spatial structure
+                        
+                %here we are simply looking for clusters w/o spatial  structure
                 conn = conndef(ndims(obs_map),'max');
                 obs_cls = bwconncomp(obs_map,conn);
                 obs_labelmatrix = labelmatrix(obs_cls);
@@ -184,6 +184,14 @@ switch(opt.method)
             stats.clusterlabelmatrix = obs_labelmatrix;
             stats.clusterpvals = cluster_pvals;
             stats.randclustermaxdistr = max_r_cls;
+            
+            %save an indexing vector for time-resolved data
+            if ismatrix(accuracy) 
+                stats.sigtime = zeros(1,size(accuracy,2));
+                clidx = find(stats.clusterpvals<0.001);
+                tpidx = []; for icl = 1:length(clidx), tpidx = [tpidx; stats.clusters{clidx(icl)}]; end 
+                stats.sigtime(tpidx) = 1;
+            end
         end
 
         
