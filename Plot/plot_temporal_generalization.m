@@ -23,6 +23,7 @@ addParameter(p, 'clusters', []);
 addParameter(p, 'title', []);
 addParameter(p, 'colorbar', true);
 addParameter(p, 'colorbar_label', 'Accuracy (%)');
+addParameter(p, 'grid', []);
 parse(p, varargin{:});
 opt = p.Results;
 
@@ -53,7 +54,7 @@ nstep = floor(ntp/nticks);
 
 imagesc(acc)
 colormap(opt.colormap)
-caxis(opt.colorlim)
+if ~isempty(opt.colorlim), caxis(opt.colorlim); end
 f = gca;
 set(f, 'xtick', 1:nstep:ntp)
 set(f,'xticklabels', round(time(1:nstep:ntp),1))
@@ -89,6 +90,12 @@ if ~isempty(clusters)
             hold on
         end
     end
+end
+
+if ~isempty(opt.grid)
+    grid on;
+    ax = gca;
+    ax.GridColor = opt.grid;
 end
 
 

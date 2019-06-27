@@ -1,6 +1,6 @@
 function [ ] = plot_time_results( accuracy, errorbar, varargin )
-% Plot decoding accuracy (or other metric) over time, using transparent shading for the error bar.
-% Function can be called in a loop to plot multiple accuracies on top of each other.
+% Plot decoding accuracy (or other metric) over time, using transparent shading for the error bapr.
+% Function can be called in a loop to plot multiple accuracies on top of each othepr.
 %
 % Inputs: accuracy and errorbar (e.g., standard deviation or SEM to be added to & subtracted from accuracy). Both same length
 % Optional inputs:
@@ -38,11 +38,13 @@ addParameter(p, 'xlabel', 'Time (s)');
 addParameter(p, 'legend', []);
 parse(p, varargin{:});
 
+pr = p.Results;
+
 %get or set time axis
-if isempty(p.Results.time)
+if isempty(pr.time)
     time = 1:length(accuracy);
 else
-    time = p.Results.time;
+    time = pr.time;
 end;
 
 if length(time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
@@ -64,43 +66,45 @@ else
 end;
 
 %plot time-course with shaded error bar
-l0 = patch([time fliplr(time)], [smooth(upper, p.Results.smooth)' fliplr(smooth(lower, p.Results.smooth)')], p.Results.color, 'EdgeColor', 'none'); hasbehavior(l0, 'legend', false);
+l0 = patch([time fliplr(time)], [smooth(upper, pr.smooth)' fliplr(smooth(lower, pr.smooth)')], pr.color, 'EdgeColor', 'none'); hasbehavior(l0, 'legend', false);
 alpha 0.15; hold on; 
-if ~isempty(p.Results.chance)
-    l1 = line([time(1) time(end)], [p.Results.chance p.Results.chance], 'color', [0.5 0.5 0.5]); hold on; hasbehavior(l1, 'legend', false);
+if isempty(pr.ylim), pr.ylim = get(gca, 'ylim'); end
+if ~isempty(pr.chance)
+    l1 = line([time(1) time(end)], [pr.chance pr.chance], 'color', [0.5 0.5 0.5]); hold on; hasbehavior(l1, 'legend', false);
 end
 if ~isempty(time==0)
-    l2 = line([0 0], [p.Results.ylim(1) p.Results.ylim(2)], 'color', [0.5 0.5 0.5]); hasbehavior(l2, 'legend', false);
+    l2 = line([0 0], [pr.ylim(1) pr.ylim(2)], 'color', [0.5 0.5 0.5]); hasbehavior(l2, 'legend', false);
 end;
-if ~isempty(p.Results.legend)
-    pl = plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth,'LineStyle', p.Results.linestyle, 'DisplayName', p.Results.legend); hold on; hasbehavior(pl, 'legend', true);
+if ~isempty(pr.legend)
+    pl = plot(time, smooth(accuracy, pr.smooth), 'color',pr.color, 'LineWidth', pr.linewidth,'LineStyle', pr.linestyle, 'DisplayName', pr.legend); hold on; hasbehavior(pl, 'legend', true);
 else
-    plot(time, smooth(accuracy, p.Results.smooth), 'color',p.Results.color, 'LineWidth', p.Results.linewidth,'LineStyle', p.Results.linestyle); hold on; 
+    plot(time, smooth(accuracy, pr.smooth), 'color',pr.color, 'LineWidth', pr.linewidth,'LineStyle', pr.linestyle); hold on; 
 end;
 
 %mark significant time points with horizontal line & vertical line for onset
-if ~isempty(p.Results.signif)
-    l3 = plot(p.Results.signif, p.Results.signif_ylocation, 'Marker', 's', 'MarkerSize', p.Results.signif_marker_size, 'MarkerFaceColor', p.Results.color,'MarkerEdgeColor', p.Results.color);
+if ~isempty(pr.signif) && sum(pr.signif)~=0
+    if length(pr.signif)==length(time) && max(pr.signif)==1, pr.signif = time(logical(pr.signif)); end %logical indexing case
+    l3 = plot(pr.signif, pr.signif_ylocation, 'Marker', 's', 'MarkerSize', pr.signif_marker_size, 'MarkerFaceColor', pr.color,'MarkerEdgeColor', pr.color);
     for j = 1:length(l3), hasbehavior(l3(j), 'legend', false); end; hold on;
-    l4 = line([p.Results.signif(1,1) p.Results.signif(1,1)], p.Results.ylim, 'color', p.Results.color); hold on; hasbehavior(l4, 'legend', false); hold on;
+    l4 = line([pr.signif(1,1) pr.signif(1,1)], pr.ylim, 'color', pr.color); hold on; hasbehavior(l4, 'legend', false); hold on;
 end;
 
-ylim(p.Results.ylim);
-if isempty(p.Results.xlim)
+if ~isempty(pr.ylim), ylim(pr.ylim); end
+if isempty(pr.xlim)
     xlim([time(1) time(end)]);
 else
-    xlim([p.Results.xlim(1) p.Results.xlim(2)]);
+    xlim([pr.xlim(1) pr.xlim(2)]);
 end;
-ylabel(p.Results.ylabel);
-xlabel(p.Results.xlabel);
+ylabel(pr.ylabel);
+xlabel(pr.xlabel);
 box off;
 
-if ~isempty(p.Results.legend)
+if ~isempty(pr.legend)
     legend('-DynamicLegend');
     legend boxoff;
 end;
 
-set(gca,'FontSize',12);
+set(gca,'FontSize',14);
 
 end
 
