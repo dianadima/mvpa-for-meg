@@ -11,7 +11,7 @@ function [stats] = run_stats(accuracy, varargin)
 %                  num_iterations -- number of sign permutations, default 5000
 %                  chance_level -- will be subtracted from accuracy, default 50
 %                  statistic -- currently only mean
-%                  clusterstatistic -- max, maxsize, maxsum, and wcm, default maxsize
+%                  clusterstatistic -- max, maxsize, maxsum, and wcm, default maxsum
 %
 % Output: stats structure containing p-values and other info
 %
