@@ -80,6 +80,8 @@ cfg = ft_definetrial(cfg);
 
 %preprocessing options
 cfg.channel = 'MEG'; 
+cfg.demean = 'yes'; 
+cfg.baselinewindow = p.Results.baseline; %baselining
 if ~isempty(p.Results.bandpass)
     cfg.bpfilter = 'yes';
     cfg.bpfreq = p.Results.bandpass;
@@ -104,7 +106,7 @@ end
 cfg = [];
 cfg.channel = 'MEG';
 cfg.covariance ='yes';
-cfg.removemean = 'no';
+cfg.removemean = 'no'; 
 data_tl = ft_timelockanalysis(cfg,data);
 clear data;    
 

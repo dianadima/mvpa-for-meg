@@ -76,6 +76,8 @@ cfg.trlidx = p.Results.trlidx;
 cfg = ft_definetrial(cfg);
 
 %preprocessing options
+cfg.demean = 'yes'; 
+cfg.baselinewindow = p.Results.baseline; %baselining
 cfg.channel = 'MEG'; 
 cfg.bpfilter = 'yes';
 cfg.bpfreq = p.Results.bandpass;
@@ -95,6 +97,8 @@ cfg.trlidx = p.Results.trlidx;
 cfg = ft_definetrial(cfg);
 
 %preprocessing options
+cfg.demean = 'yes'; 
+cfg.baselinewindow = p.Results.baseline; %baselining
 cfg.channel = 'MEG'; 
 cfg.bpfilter = 'yes';
 cfg.bpfreq = p.Results.bandpass;
