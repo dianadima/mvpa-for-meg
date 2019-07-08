@@ -5,7 +5,7 @@ function [ rand_stat, obs_stat, pvalue ] = randomize_accuracy(accuracy, varargin
 % Name-value optional inputs: 'num_iterations' (default 5000) - number of randomizations;
 %                             'chance_level' (default 50) - will be subtracted before sign flipping;
 %                             'statistic' (default 'mean') - which statistic to randomize, 'mean' or 'tstat'
-% Outputs: rand_stat contains randomized statistic (length is num_iterations);
+% Outputs: rand_stat contains randomized statistic (num_iterations x statistic);
 %          p-value (one-tailed: number of randomizations exceeding observed statistic).
 %
 % DC Dima 2018 (diana.c.dima@gmail.com)
@@ -17,7 +17,7 @@ addParameter(p, 'statistic', 'mean');
 parse(p, varargin{:});
 
 num_dim = ndims(accuracy);
-num_obs = size(accuracy,1); 
+num_obs = size(accuracy,1);
 num_iterations = p.Results.num_iterations;
 
 acc_dm = accuracy-p.Results.chance_level; %demean accuracy
@@ -25,7 +25,7 @@ acc_dm = accuracy-p.Results.chance_level; %demean accuracy
 if isvector(acc_dm), acc_dm = acc_dm(:); end
 rand_sign = sign(randn(num_iterations,num_obs));
 
-if num_iterations<=5000 && (num_dim<3 || sum(size(acc_dm))<3000) %vectorize if array not too big 
+if num_iterations<=5000 && (num_dim<3 || sum(size(acc_dm))<3000) %vectorize if array not too big
     
     switch num_dim
         case 1
@@ -72,15 +72,18 @@ else
                 rand_stat(i,:,:) = mean(racc,1)./(std(racc,[],1)./(sqrt(num_obs)));
             end
     end
-    
-    
-    if isvector(obs_stat),obs_stat = obs_stat(:); end
-    pvalue = nan(size(obs_stat));
-    for i = 1:size(obs_stat,1)
-        for ii = 1:size(obs_stat,2)
-            pvalue(i,ii) = (length(find(rand_stat(:,i,ii)>obs_stat(i,ii)))+1)/(num_iterations+1);
-        end
+end
+
+
+if isvector(obs_stat),obs_stat = obs_stat(:); end
+pvalue = nan(size(obs_stat));
+for i = 1:size(obs_stat,1)
+    for ii = 1:size(obs_stat,2)
+        pvalue(i,ii) = (length(find(rand_stat(:,i,ii)>obs_stat(i,ii)))+1)/(num_iterations+1);
     end
-    
+end
+
+
+
 end
 
