@@ -23,7 +23,7 @@ addParameter(p, 'method','omnibus'); %cluster, omnibus, fdr, mixed_of, mixed_fo 
 addParameter(p, 'alpha', 0.05);
 addParameter(p, 'clusteralpha', 0.05);
 addParameter(p, 'spatial_def', []); %neighbours or sourcemodel for space-resolved data with cluster correction
-addParameter(p, 'num_iterations', 5);
+addParameter(p, 'num_iterations', 5000);
 addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
 addParameter(p, 'clusterstatistic', 'maxsum');
