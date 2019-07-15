@@ -5,6 +5,7 @@ function plot_temporal_generalization(results, varargin)
 % Optional inputs:
 %   'time'(default []), time axis, if you wish to specify time units, rather than sampled points.
 %   'mask', binary mask (significant = 1). Significant clusters will be marked with white contours  
+%    OR 'clusters', significant clusters to plot.
 %   'clustersize' (default 1), minimal cluster size in the binary mask (2D) to be plotted
 %   'colorlim' (default [40 100]): colour limits
 %   'colormap' (default 'jet')
