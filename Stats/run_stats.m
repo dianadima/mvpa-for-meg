@@ -23,7 +23,7 @@ addParameter(p, 'method','omnibus'); %cluster, omnibus, fdr, mixed_of, mixed_fo 
 addParameter(p, 'alpha', 0.05);
 addParameter(p, 'clusteralpha', 0.05);
 addParameter(p, 'spatial_def', []); %neighbours or sourcemodel for space-resolved data with cluster correction
-addParameter(p, 'num_iterations', 5000);
+addParameter(p, 'num_iterations', 5);
 addParameter(p, 'chance_level', 50);
 addParameter(p, 'statistic', 'mean');
 addParameter(p, 'clusterstatistic', 'maxsum');
@@ -189,6 +189,7 @@ end
 
 function cl2Dstats = find2Dclusters(obs_stat,r_stat,opt)
 
+num_it = opt.num_iterations;
 prc = 100* (1 - opt.clusteralpha); %get cluster-setting percentile
 if strcmp(opt.clusterthresh, 'individual')
     thresh = prctile(r_stat,prc,1); %individual threshold setting, as in FT nonparametric_individual option
@@ -287,13 +288,13 @@ cl2Dstats.clusters = obs_cls.PixelIdxList;
 cl2Dstats.clusterstat = obs_clstat;
 cl2Dstats.clusterpvals = cluster_pvals;
 cl2Dstats.randclusterstatmax = max_r_cls;
-cl2Dstats.sigclusters = cl2Dstats.clusters(cl2Dstats.clusterpvals<=alpha);
-cl2Dstats.sigpvals = cl2Dstats.clusterpvals(cl2Dstats.clusterpvals<=alpha);
+cl2Dstats.sigclusters = cl2Dstats.clusters(cl2Dstats.clusterpvals<=opt.alpha);
+cl2Dstats.sigpvals = cl2Dstats.clusterpvals(cl2Dstats.clusterpvals<=opt.alpha);
 
 %save an indexing vector for time-resolved data
-if ismatrix(accuracy)
-    cl2Dstats.sigtime = zeros(1,size(accuracy,2));
-    tpidx = cat(1,cl2Dstats.clusters{cl2Dstats.clusterpvals<=alpha});
+if isvector(obs_stat)
+    cl2Dstats.sigtime = zeros(1,length(obs_stat));
+    tpidx = cat(1,cl2Dstats.clusters{cl2Dstats.clusterpvals<=opt.alpha});
     cl2Dstats.sigtime(tpidx) = 1;
 end
 end
