@@ -124,20 +124,22 @@ switch(opt.method)
             rndmap = reshape(rndmap,[numel(obs_stat), size(rndmap,3)]);
             clstat = clusterstat(cfg, rndmap, obs_stat(:));
             
-            stats.clusterlabelmat = reshape(clstat.posclusterslabelmat, size(obs_stat));
-            stats.clusterpvalmat = reshape(clstat.prob,size(obs_stat));
-            stats.clusterstat = [clstat.posclusters.clusterstat];
-            stats.clusters = cell(1,length(stats.clusterstat));
-            for i = 1:length(stats.clusterstat)
-                stats.clusters{i} = find(stats.clusterlabelmat==i);
-            end
-            stats.sigclusters = stats.clusters([clstat.posclusters.prob]<=alpha);
-            stats.clusterpvals = [clstat.posclusters.prob];
-            stats.randclustermaxdistr = clstat.posdistribution;
-            if ismatrix(accuracy)
-                stats.sigtime = zeros(1,size(accuracy,2));
-                tpidx = cat(1,stats.sigclusters);
-                stats.sigtime(tpidx) = 1;
+            stats.clusterpvalmat = reshape(clstat.prob,size(obs_stat));            
+            if isfield(clstat,'posclusters')
+                stats.clusterlabelmat = reshape(clstat.posclusterslabelmat, size(obs_stat));
+                stats.clusterstat = [clstat.posclusters.clusterstat];
+                stats.clusters = cell(1,length(stats.clusterstat));
+                for i = 1:length(stats.clusterstat)
+                    stats.clusters{i} = find(stats.clusterlabelmat==i);
+                end
+                stats.sigclusters = stats.clusters([clstat.posclusters.prob]<=alpha);
+                stats.clusterpvals = [clstat.posclusters.prob];
+                stats.randclustermaxdistr = clstat.posdistribution;
+                if ismatrix(accuracy)
+                    stats.sigtime = zeros(1,size(accuracy,2));
+                    tpidx = cat(1,stats.sigclusters);
+                    stats.sigtime(tpidx) = 1;
+                end
             end
             
             cd(current_path)
@@ -189,6 +191,8 @@ end
 
 function cl2Dstats = find2Dclusters(obs_stat,r_stat,opt)
 
+if isvector(obs_stat), obs_stat = obs_stat(:); end
+
 num_it = opt.num_iterations;
 prc = 100* (1 - opt.clusteralpha); %get cluster-setting percentile
 if strcmp(opt.clusterthresh, 'individual')
@@ -212,7 +216,7 @@ for i = 1:num_it
     
     r_map_ = squeeze(r_map(i,:,:));
     r_cls =  bwconncomp(r_map_,conn);
-    r_stat_ = squeeze(r_stat(i,:,:));
+    r_stat_ = squeeze(r_stat(i,:,:)); if isvector(r_stat_), r_stat_ = r_stat_(:); end
     if ~isempty(r_cls.PixelIdxList) && strcmp(opt.clusterstatistic,'maxsize')
         max_r_cls(i) = max(cellfun(@length,r_cls.PixelIdxList));
     elseif ~isempty(r_cls.PixelIdxList) && strcmp(opt.clusterstatistic,'maxsum')
@@ -231,7 +235,7 @@ for i = 1:num_it
         tmp_cls = nan(1,length(r_cls.PixelIdxList));
         for ii = 1:length(r_cls.PixelIdxList)
             if strcmp(opt.clusterthresh,'individual')
-                t = thresh_(r_cls.PixelIdxList{ii});
+                t = o_thresh(r_cls.PixelIdxList{ii});
             else
                 t = thresh;
             end
@@ -272,14 +276,13 @@ elseif strcmp(opt.clusterstatistic,'wcm')
     for i = 1:length(obs_cls.PixelIdxList)
         obs = obs_stat(obs_cls.PixelIdxList{i});
         if strcmp(opt.clusterthresh,'individual')
-            t = thresh_(obs_cls.PixelIdxList{i});
+            t = o_thresh(obs_cls.PixelIdxList{i});
         else
             t = thresh;
         end
         obs_clstat(i) = sum((obs(:)-t(:)).^1);
         cluster_pvals(i) = ((sum(max_r_cls>=obs_clstat(i)))+1)/(num_it+1);
     end
-    max_r_cls(i) = max(tmp_cls);
 end
 
 %save stuff
