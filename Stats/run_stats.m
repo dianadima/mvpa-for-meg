@@ -12,7 +12,7 @@ function [stats] = run_stats(accuracy, varargin)
 %                  chance_level -- will be subtracted from accuracy, default 50
 %                  statistic -- currently only mean
 %                  clusterstatistic -- max, maxsize, maxsum, and wcm, default maxsum
-%                  clusterthresh -- common (same threshold across sources/timepoints) or individual (separate thresholds), default common
+%                  clusterthresh -- common (same threshold across sources/timepoints) or individual (separate thresholds), default individual
 %
 % Output: stats structure containing p-values and other info
 %
