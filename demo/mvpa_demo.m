@@ -38,7 +38,7 @@ plot_time_results(sens_result1.Accuracy, sem1,'time',time,'smooth',5, 'legend', 
 plot_time_results(sens_result2.Accuracy, sem2,'time',time,'smooth',5, 'legend', 'MNN+avg', 'color', 'b','ylim',[35 105])
 
 %save figure
-if ~exist('figures',dir), mkdir('figures'); end
+if ~exist('figures','dir'), mkdir('figures'); end
 saveas(gcf, fullfile('figures','time-resolved-accuracy.png'))
 
 

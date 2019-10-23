@@ -50,7 +50,7 @@ for p = 1:n_perm
         
         if size(tmpdata,1)>1 %do we have more than 1 trial?
             
-            tmpdata = shuffle(tmpdata, 1);
+            try tmpdata = shuffle(tmpdata, 1); catch, tmpdata = tmpdata(randperm(size(tmpdata,1)),:); end
             tp = 1:n_trials:size(tmpdata, 1)-n_trials+1;
             tmpsz = [length(tp) sz(2:end)];
             avedata = zeros(tmpsz);
@@ -88,7 +88,6 @@ newdata = permute(newdata, newsz); %trials are last dim
 newlabels = cat(2,newlabels{:});
 
 %reshape so as to revert to original dimensions, with pseudotrials as last dimension
-%UNCOMMENT THIS to keep trials from each permutation separate
 if ndims(newdata)>3
     newdata = reshape(newdata, size(newdata,1), size(newdata,2), size(newdata,3)*size(newdata,4));
     newlabels = reshape(newlabels, size(newlabels,1)*size(newlabels,2),1);
