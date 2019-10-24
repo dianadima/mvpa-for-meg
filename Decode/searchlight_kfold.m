@@ -31,10 +31,10 @@ p = inputParser;
 
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
-end;
+end
 for ii = i+1:length(properties(args.decoding_args))+length(properties(args.svm_args))
     addParameter(p, list{ii}, svm_par.(list{ii}));
-end;
+end
 addParameter(p, 'sensor_idx', []);
 
 
@@ -48,7 +48,7 @@ if isstruct(cluster_idx) %the sensor-space case
     chan_idx = arrayfun(@(i) find(ismember({cluster_idx.label},[cluster_idx(i).label; cluster_idx(i).neighblabel])), 1:length(cluster_idx), 'UniformOutput', false); %store all searchlight idx in a cell array
 else
     chan_idx = cluster_idx; %the source-space case
-end;
+end
 
 %create time axis
 if ~isempty(dec_args.time)
@@ -57,7 +57,7 @@ elseif ~isempty(dec_args.sensor_idx) && isfield(sensor_idx, 'time')
     time = sensor_idx(1).time;
 else
     time = 1:size(data,2);
-end;
+end
 
 if length(time)~=size(data,2)
     time = 1:size(data,2);
@@ -77,21 +77,21 @@ if ~isempty(dec_args.decoding_window)
     else
         fprintf('\nWarning: end timepoint not found, decoding until end of data...\n');
         lims(2) = size(data,2);
-    end;
+    end
     
 else
     lims = [1 size(data,2)];
-end;
+end
 
 if size(data,2)<lims(2)
     lims(2) = size(data,2);
-end;
+end
 
 data = data(:, lims(1):lims(2), :);
 
 if ~isa(data, 'double')
     data = double(data);
-end;
+end
 
 results = struct;
 
@@ -100,14 +100,14 @@ if isempty(dec_args.cv_indices)
     cv = cvpartition(labels, 'kfold', svm_par.kfold);
 else
     cv = dec_args.cv_indices;
-end;
+end
 
 if isa(cv,'cvpartition')
     cv_train = zeros(length(labels),1); cv_test = cv_train;
     for ii = 1:dec_args.kfold
         cv_train(:,ii) = cv.training(ii);
         cv_test(:,ii) = cv.test(ii);
-    end;
+    end
 else
     if size(cv,2)~=dec_args.kfold
         error('Crossval indices must be supplied in indices x folds matrix or logical array.');
@@ -119,7 +119,7 @@ else
         cv_train = cv;
         cv_test = abs(cv_train-1);
     end
-end;
+end
 
 cv_train = logical(cv_train); cv_test = logical(cv_test);
 cv_idx = cv_train; %this will be saved for later - prior to trial averaging
@@ -131,7 +131,7 @@ if ~isempty(dec_args.pseudo)
     all_data = cell(1,svm_par.kfold); all_labels = cell(1,svm_par.kfold);
     cv_test_tmp = zeros(1,svm_par.kfold); %we have to redo the crossval indices
     
-    for ii = 1:5
+    for ii = 1:svm_par.kfold
         [ps_data, ps_labels] = create_pseudotrials(data(:,:,cv_test(:,ii)), labels(cv_test(:,ii)), dec_args.pseudo(1), dec_args.pseudo(2));
         all_data{ii} = ps_data; all_labels{ii} = ps_labels;
         if ii==1
@@ -140,8 +140,8 @@ if ~isempty(dec_args.pseudo)
         else
             idx = idx + length(all_labels{ii-1});
             cv_test_tmp(idx+1:idx+length(ps_labels),ii) = 1;
-        end;
-    end;
+        end
+    end
     
     data = cat(3,all_data{:}); labels = cat(1,all_labels{:});
     cv_train = abs(cv_test_tmp-1);
@@ -149,7 +149,7 @@ if ~isempty(dec_args.pseudo)
     cv_train = logical(cv_train); cv_test = logical(cv_test);
     clear all_data all_labels cv_test_tmp;
     
-end;
+end
 
 allscore = zeros(length(labels), length(chan_idx), floor(size(data,2)/dec_args.window_length)); accuracy = zeros(3,5, length(chan_idx), floor(size(data,2)/dec_args.window_length));
 
@@ -164,15 +164,15 @@ for ii = 1:svm_par.kfold
         for t = 1:size(data,2)
             sigma_time(1,t,:,:) = cov1para(squeeze(data(:,t,class1))');
             sigma_time(2,t,:,:) = cov1para(squeeze(data(:,t,class2))');
-        end;
+        end
         sigma_time = squeeze(mean(sigma_time,1)); %average across conditions
         sigma_inv = (squeeze(mean(sigma_time,1)))^-0.5;
         for t = 1:size(data,2)
             data(:,t,cv_train(:,ii)) = (squeeze(data(:,t,cv_train(:,ii)))'*sigma_inv)';
             data(:,t,cv_test(:,ii)) = (squeeze(data(:,t,cv_test(:,ii)))'*sigma_inv)';
             
-        end;
-    end;
+        end
+    end
     
     tp = 1:dec_args.window_length:size(data,2)-dec_args.window_length+1;
     fprintf('\nRunning searchlight ');
@@ -186,19 +186,19 @@ for ii = 1:svm_par.kfold
             kdata = reshape(data(chan_idx{c},tp(t):tp(t)+dec_args.window_length-1,:), length(chan_idx{c})*dec_args.window_length, size(data,3))'; %select time point or time window
             if svm_par.standardize
                 kdata = (kdata - repmat(min(kdata(cv_train(:,ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(kdata(cv_train(:,ii),:), [], 1) - min(kdata(cv_train(:,ii),:), [], 1), size(kdata, 1), 1);
-            end;
+            end
             svm_model = train(labels(cv_train(:,ii)), sparse(kdata(cv_train(:,ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
             [allscore(cv_test(:,ii),c,t), accuracy(:,ii,c,t), ~] = predict(labels(cv_test(:,ii)), sparse(kdata(cv_test(:,ii),:)), svm_model, '-q 1');
             
-        end;
+        end
         
         fprintf((repmat('\b',1,numel([num2str(c) num2str(length(chan_idx))])+8)));
         
-    end;
+    end
     
     fprintf([repmat('\b',1,20) 'Done']);
     
-end;
+end
 
 %store a bunch of stuff
 results.Accuracy = squeeze(mean(accuracy(1,:,:,:),2));
@@ -215,9 +215,9 @@ for c = 1:length(chan_idx)
             results.Fscore1(c,t) = (2*PP*results.Sensitivity(c,t))/(PP+results.Sensitivity(c,t));
             results.Fscore2(c,t) = (2*NP*results.Specificity(c,t))/(NP+results.Specificity(c,t));
             results.WeightedFscore(c,t) = ((sum(results.Confusion{c,t}(:,1))/sum(results.Confusion{c,t}(:)))*results.Fscore1(c,t)) + ((sum(results.Confusion{c,t}(:,2))/sum(results.Confusion{c,t}(:)))*results.Fscore2(c,t));
-        end;
-    end;
-end;
+        end
+    end
+end
 results.cv_indices = cv_idx; %this can be reused
 
 end
