@@ -156,6 +156,7 @@ for icv = 1: svm_par.iterate_cv
             end
         end
         
+        data_orig = data; labels_orig = labels; %keep original data and labels
         data = cat(3,all_data{:}); labels = cat(1,all_labels{:});
         cv_train = abs(cv_test_tmp-1);
         cv_test = cv_test_tmp;
@@ -223,6 +224,7 @@ for icv = 1: svm_par.iterate_cv
     results.PredictedLabels(icv,:,:) = allscore;
     if ~isempty(dec_args.pseudo)
         results.PseudoLabels(:,icv) = labels(:); %column vector
+        data = data_orig; labels = labels_orig; %restore original data and labels
     end
     
 end   
