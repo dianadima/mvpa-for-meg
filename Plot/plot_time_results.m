@@ -45,11 +45,16 @@ if isempty(pr.time)
     time = 1:length(accuracy);
 else
     time = pr.time;
-end;
+end
 
-if length(time)~=size(errorbar,2) || length(accuracy)~=size(errorbar,2)
+%column vectors
+if size(time,1)~=1, time = time'; end
+if size(errorbar,1)~=1, errorbar = errorbar'; end
+if size(accuracy,1)~=1, accuracy = accuracy'; end
+
+if size(time,2)~=size(errorbar,2) || size(accuracy,2)~=size(errorbar,2)
     error('Time, accuracy and error should have the same length');
-end;
+end
 
 %get error bars
 if size(errorbar,1)==1
@@ -58,12 +63,12 @@ if size(errorbar,1)==1
 elseif size(errorbar,1)==2
     if errorbar(1,1)>errorbar(2,1)
          errorbar = flipud(errorbar);
-    end;
+    end
     upper = errorbar(2,:);
     lower = errorbar(1,:);
 else
     error('The errorbar can contain one or two row vectors');
-end;
+end
 
 %plot time-course with shaded error bar
 l0 = patch([time fliplr(time)], [smooth(upper, pr.smooth)' fliplr(smooth(lower, pr.smooth)')], pr.color, 'EdgeColor', 'none'); hasbehavior(l0, 'legend', false);
@@ -74,12 +79,12 @@ if ~isempty(pr.chance)
 end
 if ~isempty(time==0)
     l2 = line([0 0], [pr.ylim(1) pr.ylim(2)], 'color', [0.5 0.5 0.5]); hasbehavior(l2, 'legend', false);
-end;
+end
 if ~isempty(pr.legend)
     pl = plot(time, smooth(accuracy, pr.smooth), 'color',pr.color, 'LineWidth', pr.linewidth,'LineStyle', pr.linestyle, 'DisplayName', pr.legend); hold on; hasbehavior(pl, 'legend', true);
 else
     plot(time, smooth(accuracy, pr.smooth), 'color',pr.color, 'LineWidth', pr.linewidth,'LineStyle', pr.linestyle); hold on; 
-end;
+end
 
 %mark significant time points with horizontal line & vertical line for onset
 if ~isempty(pr.signif) && sum(pr.signif)~=0
@@ -87,22 +92,22 @@ if ~isempty(pr.signif) && sum(pr.signif)~=0
     l3 = plot(pr.signif, pr.signif_ylocation, 'Marker', 's', 'MarkerSize', pr.signif_marker_size, 'MarkerFaceColor', pr.color,'MarkerEdgeColor', pr.color);
     for j = 1:length(l3), hasbehavior(l3(j), 'legend', false); end; hold on;
     l4 = line([pr.signif(1,1) pr.signif(1,1)], pr.ylim, 'color', pr.color); hold on; hasbehavior(l4, 'legend', false); hold on;
-end;
+end
 
 if ~isempty(pr.ylim), ylim(pr.ylim); end
 if isempty(pr.xlim)
     xlim([time(1) time(end)]);
 else
     xlim([pr.xlim(1) pr.xlim(2)]);
-end;
+end
 ylabel(pr.ylabel);
 xlabel(pr.xlabel);
-box off;
+box off
 
 if ~isempty(pr.legend)
-    legend('-DynamicLegend');
-    legend boxoff;
-end;
+    legend('-DynamicLegend')
+    legend boxoff
+end
 
 set(gca,'FontSize',14);
 
