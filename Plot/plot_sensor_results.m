@@ -22,7 +22,7 @@ list = fieldnames(dec_args);
 p = inputParser;
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
-end;
+end
 addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'colormap', 'jet');
 addParameter(p, 'highlight_channels', []);
@@ -41,8 +41,8 @@ else
         time = 1:size(results,2);
     elseif ndims(results)==3
         time = 1:size(results,3);
-    end;
-end;
+    end
+end
 
 if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
@@ -50,21 +50,21 @@ if ~isempty(dec_args.decoding_window)
     else
         fprintf('Warning: starting timepoint not found. Starting from 1...');
         lims(1) = 1;
-    end;
+    end
     if ~isempty(find(round(time,3)==dec_args.decoding_window(end),1))
         lims(2) = find(round(time,3)==dec_args.decoding_window(end));
     else
         fprintf('Warning: end timepoint not found. Plotting til the end...');
         lims(2) = length(time);
-    end;
+    end
         
 else
     lims = [1 length(time)];
-end;
+end
 
 if length(time)<lims(2)
     lims(2) = length(time);
-end;
+end
 
 if ismatrix(results)
     acc = results;
@@ -73,7 +73,7 @@ elseif ndims(results)==3
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
     error('Results should be a 2d or 3d matrix containing subjects x channels x time');
-end;
+end
 
 %create structure for plotting
 sens.acc = acc;
@@ -84,7 +84,7 @@ cfg.xlim = time(lims(1)):dec_args.window_length:time(lims(2));
 %1D data case (1 timepoint)
 if numel(cfg.xlim)==1
     cfg.xlim(2) = cfg.xlim(1);
-end;    
+end 
 cfg.zlim = dec_args.colorlim;
 cfg.layout = [dec_args.configuration '.lay'];
 cfg.parameter = 'acc';
@@ -103,7 +103,7 @@ if ~isempty(dec_args.highlight_channels)
     cfg.highlightmarker = 'o';
     cfg.highlightcolor = [1 1 1];
     cfg.highlightsize = 8;
-end;
+end
 
 ft_topoplotER(cfg,sens)
 

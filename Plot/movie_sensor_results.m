@@ -14,8 +14,8 @@ function [ ] = movie_sensor_results( results, neighbours, output_file, varargin 
 
 if isempty(neighbours)
     [~, ftdir] = ft_version; %get FT directory
-    load([ftdir '/template/neighbours/ctf275_neighb.mat']);
-end;
+    load([ftdir '/template/neighbours/ctf275_neighb.mat'], 'neighbours');
+end
 
 dec_args = args.decoding_args;
 dec_args.decoding_window = []; %replace default
@@ -23,7 +23,7 @@ list = fieldnames(dec_args);
 p = inputParser;
 for i = 1:length(properties(args.decoding_args))
     addParameter(p, list{i}, dec_args.(list{i}));
-end;
+end
 addParameter(p, 'configuration', 'CTF275');
 addParameter(p, 'colorlim', [40 100]);
 addParameter(p, 'colormap', 'jet');
@@ -35,15 +35,15 @@ dec_args = p.Results;
 %create time axis
 if ~isempty(dec_args.time)
     time = dec_args.time;
-elseif isfield(neighbours, 'time') && ismember(length(neighbours(1).time), [size(results,2), size(results,3)])
-    time = neighbours(1).time;
+elseif isfield(neighbours, 'time') 
+    time = neighbours(1).time; 
 else
     if ismatrix(results)
         time = 1:size(results,2);
     elseif ndims(results)==3
         time = 1:size(results,3);
-    end;
-end;
+    end
+end
 
 if ~isempty(dec_args.decoding_window)
     if ~isempty(find(round(time,3)==dec_args.decoding_window(1),1))
@@ -51,21 +51,21 @@ if ~isempty(dec_args.decoding_window)
     else
         fprintf('Warning: starting timepoint not found. Starting from 1...');
         lims(1) = 1;
-    end;
+    end
     if ~isempty(find(round(time,3)==dec_args.decoding_window(end),1))
         lims(2) = find(round(time,3)==dec_args.decoding_window(end));
     else
         fprintf('Warning: end timepoint not found. Plotting til the end...');
         lims(2) = length(time);
-    end;
+    end
         
 else
     lims = [1 length(time)];
-end;
+end
 
 if length(time)<lims(2)
     lims(2) = length(time);
-end;
+end
 
 if ismatrix(results)
     acc = results;
@@ -74,11 +74,11 @@ elseif ndims(results)==3
     fprintf('Warning: assuming subjects are 1st dimension of accuracy matrix....')
 else
     error('Results should be a 2d or 3d matrix containing subjects x channels x time');
-end;
+end
 
 %create structure for plotting
 acc = acc(:,lims(1):lims(2));
-sens.label = {neighbours(:).label};
+try sens.label = neighbours.label; catch, sens.label = {neighbours(:).label}; end
 sens.dimord = 'chan_time';
 sens.time = 1;
 cfg.xlim = [1 1];
@@ -100,9 +100,9 @@ for i = 1:size(acc,2)
     c = colorbar; c.Label.String = dec_args.result_type;
     if ~isempty(dec_args.time)
         text(-0.5,-0.5, pad(num2str(round(dec_args.time(i),3)),10), 'FontWeight', 'normal');
-    end;
+    end
     F(i) = getframe(gcf);
-end;
+end
 
 vid_obj = VideoWriter(output_file);
 vid_obj.FrameRate=2;

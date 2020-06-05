@@ -62,7 +62,7 @@ else
             for i = 1:num_iterations
                 rsgn = repmat(squeeze(rand_sign(i,:))',[1 sz1 sz2]);
                 racc = acc_dm.*rsgn;
-                rand_stat(i,:,:) = mean(racc);
+                rand_stat(i,:,:) = mean(racc,1);
             end
         case 'tstat'
             obs_stat = squeeze(mean(acc_dm,1)./(std(acc_dm,[],1)./sqrt(num_obs)));

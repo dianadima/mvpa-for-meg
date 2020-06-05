@@ -77,8 +77,8 @@ for icv = 1: svm_par.iterate_cv
         kdata = data; %ensures we keep original data
         if svm_par.standardize
             data = (kdata - repmat(min(data(cv_train(:,ii),:), [], 1), size(kdata, 1), 1)) ./ repmat(max(data(cv_train(:,ii),:), [], 1) - min(data(cv_train(:,ii),:), [], 1), size(kdata, 1), 1);
-        end;
-        
+        end
+        data(isnan(data)|isinf(data)) = 0;
         svm_model = train(labels(cv_train(:,ii)), sparse(data(cv_train(:,ii),:)), sprintf('-s %d -c %d -q 1', svm_par.solver, svm_par.boxconstraint)); %dual-problem L2 solver with C=1
         [allscore(cv_test(:,ii)), accuracy(:,ii), ~] = predict(labels(cv_test(:,ii)), sparse(data(cv_test(:,ii),:)), svm_model, '-q 1');
         
