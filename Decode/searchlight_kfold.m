@@ -45,7 +45,7 @@ clear p;
 
 %channel indices for each searchlight iteration
 if isstruct(cluster_idx) %the sensor-space case
-    chan_idx = arrayfun(@(i) find(ismember({cluster_idx.label},[cluster_idx(i).label; cluster_idx(i).neighblabel])), 1:length(cluster_idx), 'UniformOutput', false); %store all searchlight idx in a cell array
+    chan_idx = arrayfun(@(i) find(ismember({cluster_idx.label},[cluster_idx(i).label; cluster_idx(i).neighblabel(:)])), 1:length(cluster_idx), 'UniformOutput', false); %store all searchlight idx in a cell array
 else
     chan_idx = cluster_idx; %the source-space case
 end
